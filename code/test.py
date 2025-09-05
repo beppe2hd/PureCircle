@@ -26,10 +26,10 @@ dfIrrigation.rename(columns={"Date": "datetime", "Irrigation Duration": "duratio
 dfIrrigation["datetime"] = pd.to_datetime(dfIrrigation["datetime"]) + pd.to_timedelta("12:00:00")
 dfIrrigation.sort_values("datetime", ascending=True, inplace=True)
 CW = [1, 2, 5, 6, 15, 16, 23, 24, 31, 32, 33, 34]
-F = [3, 4, 7, 8, 19, 20, 21, 22, 25, 26, 35, 36]
+F = [9, 10, 11, 12, 13, 14, 17, 18, 27, 28, 29, 30]
 # dfIrrigation.loc[dfIrrigation['Plot'] == 'CROPWAT', 'Plot'] = 0
 dfIrrigation["Plot"] = dfIrrigation["Plot"].apply(
-    lambda x: CW if x == "CROPWAT" else [x] if isinstance(x, int) else F
+    lambda x: CW if x == "CROPWAT" else [x*2, x*2-1] if isinstance(x, int) else F
 )
 
 # dfLAI = pd.read_excel('../data/LAI_Morocco_Season1.xlsx', usecols=[0, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
