@@ -1,4 +1,7 @@
 import pandas as pd
+import dash
+from dash import dcc, html
+import plotly.graph_objects as go
 
 # print("hello")
 # elements = []
@@ -157,4 +160,9 @@ fig.add_trace(go.Scatter(
 ))
 
 # Show plot
-fig.show()
+#fig.show()
+app = dash.Dash(__name__)
+app.layout = html.Div([dcc.Graph(figure=fig)])
+
+if __name__ == "__main__":
+    app.run(debug=True, port=8050)  # default host=127.0.0.1
