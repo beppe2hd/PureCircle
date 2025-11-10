@@ -25,8 +25,6 @@ def select_train_test(train_path='field_f2', test_path='field_f10'):
     return df_train, df_test
 
 
-
-
 class TimeSeriesDataset(Dataset):
     def __init__(self, data, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift):
         """
@@ -194,7 +192,8 @@ def train(dataloader_train, dataloader_test, input_size, output_size, forecast_s
             mse_overEpoches[epoch] = mse_s / count
             test_losses[epoch] = test_loss / count
 
-    return test_losses[-1]
+
+    return test_losses[-1], model
 
 
 
@@ -230,8 +229,8 @@ torch.backends.cudnn.benchmark = False
 
 input_seq_len = 30 # dataset
 output_seq_len = 12 # dataset
-input_features_list = [0,1,2,3,4,5,6,7,8,9,10,11,12,13] # dataset
-input_forecast_features_list = [14,15,16,17,18,19,20,21,22] # dataset
+input_features_list = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14] # dataset
+input_forecast_features_list = [24,25,26,27,28,29,30] # dataset
 out_features_list = [0,1] # dataset
 shift = 24 #dataset
 
@@ -245,15 +244,17 @@ epochs = 30
 
 collection = []
 
-for input_seq_len in [24, 48, 72, 96]:
-    for output_seq_len in [12, 24, 48, 72]:
-        for shift in [12, 24, 36]:
+for input_seq_len in [24]:
+    for output_seq_len in [24]:
+        for shift in [24]:
 
-            df_train, df_test = select_train_test(train_path='code/fieldForecast/field_forecast_f2', test_path='code/fieldForecast/field_forecast_f10')
+            df_train, df_test = select_train_test(train_path='code/fieldsComplete/field_f2', test_path='code/fieldsComplete/field_f10')
             dataloader_train, dataloader_test = set_data_loader(df_train, df_test, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift)
-            loss = train(dataloader_train, dataloader_test, input_size, output_size, forecast_size, hidden_size, output_seq_len, epochs)
+            loss_mse, model = train(dataloader_train, dataloader_test, input_size, output_size, forecast_size, hidden_size, output_seq_len, epochs)
 
-            out = {'input_seq_len': input_seq_len, 'output_seq_len': output_seq_len, 'shift': shift, 'MSE': loss}
+            out = {'input_seq_len': input_seq_len, 'output_seq_len': output_seq_len, 'shift': shift, 'MSE': loss_mse}
+            torch.save(model.state_dict(), f"models/model_weights_{input_seq_len}_output_seq_len_{shift}.pth")
+
             collection.append(out)
 
 print(collection)  
