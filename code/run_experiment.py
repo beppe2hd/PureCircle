@@ -244,16 +244,16 @@ epochs = 30
 
 collection = []
 
-for input_seq_len in [24]:
-    for output_seq_len in [24]:
-        for shift in [24]:
+for input_seq_len in [24, 48, 72]:
+    for output_seq_len in [24, 48]:
+        for shift in [0]:
 
-            df_train, df_test = select_train_test(train_path='code/fieldsComplete/field_f2', test_path='code/fieldsComplete/field_f10')
+            df_train, df_test = select_train_test(train_path='code/fields/field_f2', test_path='code/fields/field_f10')
             dataloader_train, dataloader_test = set_data_loader(df_train, df_test, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift)
             loss_mse, model = train(dataloader_train, dataloader_test, input_size, output_size, forecast_size, hidden_size, output_seq_len, epochs)
 
             out = {'input_seq_len': input_seq_len, 'output_seq_len': output_seq_len, 'shift': shift, 'MSE': loss_mse}
-            torch.save(model.state_dict(), f"models/model_weights_{input_seq_len}_output_seq_len_{shift}.pth")
+            torch.save(model.state_dict(), f"weights/model_weights_{input_seq_len}_output_seq_len_{output_seq_len}_shift_{shift}.pth")
 
             collection.append(out)
 
