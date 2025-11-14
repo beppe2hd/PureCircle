@@ -89,6 +89,8 @@ Each component plays a specific role in the experimental workflow — from trans
 | **`createDataset.ipynb`** | Jupyter notebook that generates a **complete and clean dataset** (CSV format) for each experimental field. It reads and merges data from the provided `.xlsx` source files (soil moisture, irrigation events, meteorological data, and LAI) into unified time-series datasets ready for modeling. |
 | **`run_experiments.py`** | Main Python script to **train forecasting models** using the prepared datasets. It handles data loading, model configuration, and training routines, and automatically saves the trained model weights into the `weights/` directory. |
 | **`plotResults.py`** | Script for **visualizing and analyzing model outputs**. It loads predictions and observed data to produce performance plots (e.g., time series comparisons, error metrics, or evaluation summaries). Useful for assessing and comparing model performance across irrigation strategies and quinoa varieties. |
+| **`forecastReliability_getThreshold.py`** | This file load a specific model with its specific configuration and plot the distribution: 1) the mean of the differenc between the soil moisture in observation windows and in GT forecast, 2) the mean and variance of soil moisture in observation windows and in GT forecast. |
+| **`forecastReliability_testThreshold.py`** | Given a threshold discriminating sudden changes between the sm in the observation windows and the forecast GT this script show the distribution of the error for bot cases. In other tarns this shows the error magnitude in case of small changes between the observation windows and the forecast GT and the magnitude of the error when this change in more evident. |
 
 
 ---
