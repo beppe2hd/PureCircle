@@ -1,8 +1,9 @@
-# 🌾 Quinoa Irrigation Data — University of Hohenheim Project
+# 🌾 Soil Moisture Forecasting and Irrigation Insights
 
 ## 📘 Overview
 
-The **University of Hohenheim** provided experimental field data collected at a **Moroccan research station**.  
+This repository provide the operative code devoted to the develop and deploy of AI based soil oisture forecasting system. The **University of Hohenheim** provided experimental field data collected at a **Moroccan research station** that have been processed by **CNR-ISASI Lecce**.
+
 The data have been collected with **three different irrigation management approaches** on **two quinoa varieties** under local field conditions.
 
 <img src="images/fields.png" width="600">
@@ -91,6 +92,8 @@ Each component plays a specific role in the experimental workflow — from trans
 | **`plotResults.py`** | Script for **visualizing and analyzing model outputs**. It loads predictions and observed data to produce performance plots (e.g., time series comparisons, error metrics, or evaluation summaries). Useful for assessing and comparing model performance across irrigation strategies and quinoa varieties. |
 | **`forecastReliability_getThreshold.py`** | This file load a specific model with its specific configuration and plot the distribution: 1) the mean of the differenc between the soil moisture in observation windows and in GT forecast, 2) the mean and variance of soil moisture in observation windows and in GT forecast. |
 | **`forecastReliability_testThreshold.py`** | Given a threshold discriminating sudden changes between the sm in the observation windows and the forecast GT this script show the distribution of the error for bot cases. In other tarns this shows the error magnitude in case of small changes between the observation windows and the forecast GT and the magnitude of the error when this change in more evident. |
+| **`externalAPI`** | This module is dedicated to retrieving weather data from the Open-Meteo public weather service (open-meteo.com).|
+| **`api`** | Thius module allow to run a publically available end-point receiving reading sensor data and providing soil moisture forecast.| 
 
 
 ---
