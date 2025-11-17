@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+import joblib
 
 
 
@@ -77,7 +78,7 @@ def set_data_loader(df_train, df_test, input_seq_len, output_seq_len, input_feat
     dataset_test = TimeSeriesDataset(time_series_test, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift)
     dataloader_test = DataLoader(dataset_test, batch_size=32, shuffle=True)
 
-    return dataloader_train, dataloader_test
+    return dataloader_train, dataloader_test, scaler
     
 
 class Encoder(nn.Module):
@@ -249,11 +250,12 @@ for input_seq_len in [24, 48, 72]:
         for shift in [0]:
 
             df_train, df_test = select_train_test(train_path='code/fields/field_f2', test_path='code/fields/field_f10')
-            dataloader_train, dataloader_test = set_data_loader(df_train, df_test, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift)
+            dataloader_train, dataloader_test, scaler = set_data_loader(df_train, df_test, input_seq_len, output_seq_len, input_features_list, input_forecast_features_list, out_features_list, shift)
             loss_mse, model = train(dataloader_train, dataloader_test, input_size, output_size, forecast_size, hidden_size, output_seq_len, epochs)
 
             out = {'input_seq_len': input_seq_len, 'output_seq_len': output_seq_len, 'shift': shift, 'MSE': loss_mse}
             torch.save(model.state_dict(), f"weights/model_weights_{input_seq_len}_output_seq_len_{output_seq_len}_shift_{shift}.pth")
+            joblib.dump(scaler, "scaler.pkl")
 
             collection.append(out)
 

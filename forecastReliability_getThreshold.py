@@ -63,7 +63,6 @@ def set_data_loader(df_test, input_seq_len, output_seq_len, input_features_list,
 
     return dataloader_test, scaler
 
-
 def test_model(dataloader_test):
 
     with torch.inference_mode():

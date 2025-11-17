@@ -3,10 +3,12 @@ from fastapi import FastAPI
 import torch
 from torch import nn
 import argparse
+import pandas as pd
 
 import mysql.connector
 from datetime import datetime, timedelta
-
+import joblib
+from externalAPI.Weather import weather_request
 
 
 
@@ -61,11 +63,48 @@ class Seq2Seq(nn.Module):
 
         return torch.cat(outputs, dim=1)
 
+#Complete Data
+# datetime
+# 00 - s_b
+# 01 - s_w
+# 02 - LAI
+# 03 - irr
+# 04 - temperature_2m
+# 05 - relative_humidity_2m
+# 06 - cloud_cover
+# 07 - wind_speed_10m
+# 08 - wind_direction_100m
+# 09 - soil_temperature_0_to_7cm
+# 10 - soil_temperature_7_to_28cm
+# 11 - soil_temperature_28_to_100cm
+# 12 - rain
+# 13 - precipitation
+# 14 - evapotranspiration
+# 15 - Temp
+# 16 - Hum
+# 17 - Int
+# 18 - UVI
+# 19 - WS
+# 20 - WD
+# 21 - RG
+# 22 - BP
+# 23 - temperature_2m_f
+# 24 - relative_humidity_2m_f
+# 25 - cloud_cover_f
+# 26 - wind_speed_10m_f
+# 27 - wind_direction_10m_f
+# 28 - soil_temperature_0cm_f
+# 29 - soil_temperature_6cm_f
+# 30 - soil_temperature_18cm_f
+# 31 - rain_f
+
 
 input_seq_len = 24 # dataset
 output_seq_len = 24 # dataset
 input_features_list = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14] # dataset
+features = ["temperature_2m", "relative_humidity_2m", "cloud_cover", "wind_speed_10m", " wind_direction_100m", "soil_temperature_0_to_7cm", "soil_temperature_7_to_28cm", "soil_temperature_28_to_100cm", "rain", "precipitation", "evapotranspiration"]
 input_forecast_features_list = [24,25,26,27,28,29,30] # dataset
+features_forecast = ["temperature_2m", "relative_humidity_2m", "cloud_cover", "wind_speed_10m", "wind_direction_10m", "soil_temperature_0cm", "soil_temperature_6cm", "soil_temperature_18cm", "rain"]
 out_features_list = [0,1] # dataset
 shift = 24 #dataset
 
@@ -79,7 +118,31 @@ encoder = Encoder(input_size, hidden_size)
 decoder = Decoder(output_size, hidden_size, forecast_size)
 model = Seq2Seq(encoder, decoder, output_seq_len)
 model.load_state_dict(torch.load("model_weights.pth"))
-model.eval() 
+model.eval()
+
+scaler = joblib.load("scaler.pkl")
+x_scaled = scaler.transform(x)
+
+# Current time
+now = datetime.now()
+current_hour = now.replace(minute=0, second=0, microsecond=0)
+hours_forecast = current_hour + timedelta(hours=23)
+hours_past = current_hour - timedelta(hours=23)
+index_forecast = pd.date_range(current_hour, hours_forecast, freq="h")
+index_past = pd.date_range(hours_past, current_hour, freq="h")
+
+
+features = ["temperature_2m", "relative_humidity_2m", "cloud_cover", "wind_speed_10m", "wind_direction_10m", "soil_temperature_0_to_7cm", "soil_temperature_7_to_28cm", "soil_temperature_28_to_100cm", "rain", "precipitation", "evapotranspiration"]
+features_forecast = ["temperature_2m", "relative_humidity_2m", "cloud_cover", "wind_speed_10m", "wind_direction_10m", "soil_temperature_0cm", "soil_temperature_6cm", "soil_temperature_18cm", "rain"]
+
+w = weather_request('2025-11-16', '2025-11-17', 34.90, 2.4)
+
+h_f = w.meteo_request_forecast(features_forecast)
+h_p = w.meteo_request_histor(features)
+
+h_f = w.extractsubset(h_f, index_forecast)
+h_p = w.extractsubset(h_p, index_past)
+
 
 x =[[ 1.8545,  1.8478, -0.0423, -0.5479,  0.0712,  0.9985,  1.6822,  0.3739,
          -0.6415,  0.0085, -0.0857, -0.1564, -0.1564, -0.4880,  1.1551],
@@ -154,6 +217,7 @@ x_f = [[-0.7470, -0.0986,  1.9338,  0.4257, -0.0180,  0.0348,  0.1983],
         [ 0.4760,  0.7922, -0.9099,  0.5807, -0.2127,  0.0348,  0.4637],
         [ 0.4760,  0.7158, -1.0270, -0.0288, -0.2725, -0.0324,  0.3973],
         [ 0.4760,  0.4868, -0.9433, -0.2561, -0.3624, -0.0995,  0.3642]]
+
 
 x = torch.tensor(x)
 x_f = torch.tensor(x_f)
