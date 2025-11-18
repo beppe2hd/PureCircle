@@ -1,10 +1,21 @@
+<img src="images/logo_purecircles.png" height="120"> &nbsp;&nbsp;&nbsp;&nbsp;
+<img src="images/Prima-logo.png" height="120">
+
+&nbsp;
+
+&nbsp;
+&nbsp;
+
 # 🌾 Soil Moisture Forecasting and Irrigation Insights
+
+This repository provide an AI based Decision Support System (DSS) for smart agriculture. This aciviti is part of the [PureCircle](https://purecircles.uni-hohenheim.de/en) project funded by [PRIMA](https://prima-med.org) program.
+
 
 ## 📘 Overview
 
-This repository provide the operative code devoted to the develop and deploy of AI based soil oisture forecasting system. The **University of Hohenheim** provided experimental field data collected at a **Moroccan research station** that have been processed by **CNR-ISASI Lecce**.
+The provided software is devoted to the develop and deploy of AI based soil moisture forecasting system. The **University of Hohenheim** provided experimental field data collected at a **Moroccan research station** that have been processed by [CNR-ISASI](https://www.isasi.cnr.it).
 
-The data have been collected with **three different irrigation management approaches** on **two quinoa varieties** under local field conditions.
+Data have been collected with **three different irrigation management approaches** on **two quinoa varieties** under local field conditions.
 
 <img src="images/fields.png" width="600">
 
