@@ -1,0 +1,67 @@
+type: object
+properties:
+  name:
+    type: string
+    description: "Name of the model"
+    example: "configuration_1"
+
+  version:
+    type: string
+    description: "Version identifier for the configuration or model"
+    example: "0.0.1"
+
+  architecture:
+    type: string
+    description: "Model architecture name or type"
+    example: "RNN"
+
+  hyperparameters:
+    type: object
+    description: "Hyperparameters used during model training."
+    properties:
+      batch_size:
+        type: integer
+        description: "Number of samples processed before the model is updated."
+      learning_rate:
+        type: number
+        description: "Learning rate used by the optimizer."
+      optimizer:
+        type: string
+        description: "Name of the optimization algorithm (e.g., adam, sgd)."
+
+  window:
+    type: object
+    description: "Sliding window parameters for past context and future forecasting."
+    properties:
+      past:
+        type: integer
+        description: "Number of past timesteps used as input."
+      forecast:
+        type: integer
+        description: "Number of future timesteps to predict."
+
+  features:
+    type: object
+    description: "Definition of input and output features for the model."
+    properties:
+      input:
+        type: object
+        description: "Input features used by the model."
+        properties:
+          fields:
+            type: array
+            items: {}
+            description: "List of model input fields or feature names."
+          open_meteo_historical:
+            type: array
+            items: {}
+            description: "Historical features retrieved from Open-Meteo."
+          open_meteo_forecast:
+            type: array
+            items: {}
+            description: "Forecast features retrieved from Open-Meteo."
+
+      output:
+        type: array
+        items: {}
+        description: "List of output feature names the model should produce."

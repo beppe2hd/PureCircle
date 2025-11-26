@@ -2,3 +2,6 @@ weights/
 out.json
 .idea/
 .vscode/
+**/__pycache__
+**/data
+.vscode/

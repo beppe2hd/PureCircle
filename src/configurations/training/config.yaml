@@ -1,0 +1,20 @@
+name: str
+version: 0.0.1
+
+architecture: str
+
+hyperparameters:
+  batch_size: int
+  learning_rate: float
+  optimizer: str
+
+window:
+  past: int
+  forecast: int
+
+features:
+  input:
+    fiedls: []
+    open_meteo_historical: []
+    open_meteo_forecast: []
+  output: []
