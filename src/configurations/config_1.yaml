@@ -1,0 +1,35 @@
+name: str
+version: 0.0.1
+
+architecture: 
+  type: "RNN"
+  hidden: 20
+
+
+hyperparameters:
+  batch_size: 32
+  learning_rate: 0.001
+  momentum: 0.9
+  weight_decay: 1e-4
+  optimizer: "SGD"
+  loss: "MSELoss"
+  epoches: 30
+
+window:
+  past: int
+  forecast: int
+
+files:
+  training: ./data/csv_files/field_f1.csv"
+  test: "./data/csv_files/field_f2.csv"
+
+features:
+  input:
+    fiedls: []
+    meteo_historical: []
+    meteo_forecast: []
+  output: []
+  input_seq_len: 70
+  output_seq_len: 24
+  shift: 0
+

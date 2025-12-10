@@ -33,10 +33,12 @@ class Decoder(nn.Module):
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, encoder, decoder, output_seq_len):
+    def __init__(
+        self, input_size, output_size, hidden_size, forecast_size, output_seq_len
+    ):
         super(Seq2Seq, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
+        self.encoder = Encoder(input_size, hidden_size)
+        self.decoder = Decoder(output_size, hidden_size, forecast_size)
         self.output_seq_len = output_seq_len
 
     def forward(self, x, x_f):
