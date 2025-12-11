@@ -1,3 +1,4 @@
+# %%
 import torch
 from torch import nn
 import pandas as pd
@@ -11,25 +12,26 @@ import joblib
 import yaml
 import argparse
 import os
-from commons.trainingObjects.loadObj import load_Optimizer, load_Loss
+import sys
 
-from commons.architectures.create_model import create_model
+from dotenv import load_dotenv
+
+load_dotenv()
+sys.path.append(os.getenv("PYTHONPATH"))
+
+from src.commons.trainingObjects.loadObj import load_Optimizer, load_Loss
+from src.commons.architectures.create_model import create_model
 
 
 def get_config_file():
     parser = argparse.ArgumentParser()
     parser.add_argument("--configFile", type=str, required=True)
     args = parser.parse_args()
-    with open(args.name, "r") as f:
+    with open(args.configFile, "r") as f:
         config = yaml.safe_load(f)
     return config
 
 
-#######################
-##
-##   Run Experiment
-##
-#######################
 def set_randomness():
     # Define the seed value
     seed = 42
@@ -59,7 +61,7 @@ def load_train_test(train_path, test_path):
 
 
 class TimeSeriesDataset(Dataset):
-    def __init__(self, data, config):
+    def __init__(self, config, data):
         """
         Args:
             data (pandas.Dataframe)
@@ -79,18 +81,20 @@ class TimeSeriesDataset(Dataset):
         ]
         self.out_features_list = config["features"]["output"]
         self.shift = config["features"]["shift"]
-        self.length = len(data) - input_seq_len - output_seq_len + 1 - self.shift
+        self.length = (
+            len(self.data) - self.input_seq_len - self.output_seq_len + 1 - self.shift
+        )
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
         x = self.data[self.input_features_list]
-        x = torch.tensor(x, dtype=torch.float32)
+        x = torch.tensor(x.values, dtype=torch.float32)
         x = x[idx : idx + self.input_seq_len, :]
 
         x_f = self.data[self.input_forecast_features_list]
-        x_f = torch.tensor(x_f, dtype=torch.float32)
+        x_f = torch.tensor(x_f.values, dtype=torch.float32)
         x_f = x_f[
             idx
             + self.input_seq_len
@@ -102,8 +106,8 @@ class TimeSeriesDataset(Dataset):
         ]
 
         y = self.data[self.out_features_list]
-        y = torch.tensor(y, dtype=torch.float32)
-        y = self.data[
+        y = torch.tensor(y.values, dtype=torch.float32)
+        y = y[
             idx
             + self.input_seq_len
             + self.shift : idx
@@ -116,13 +120,13 @@ class TimeSeriesDataset(Dataset):
         return x, x_f, y
 
 
-def inverse_scale_data(output, cols):
+def inverse_scale_data(output, cols, scaler):
 
-    mean = scaler.mean_[cols]
-    std = scaler.scale_[cols]
+    mean = torch.tensor(scaler.mean_[cols])
+    std = torch.tensor(scaler.scale_[cols])
 
-    std = std.view(1, len(cols), 1)  # → shape [1, 2, 1]
-    mean = mean.view(1, len(cols), 1)
+    std = std.view(1, 1, len(cols))  # → shape [1, 2, 1]
+    mean = mean.view(1, 1, len(cols))
 
     output = output * std + mean
 
@@ -134,11 +138,11 @@ def scale_data(df_train, df_test):
     scaler = StandardScaler()
     scaler.fit(df_train)
 
-    df_train = scaler.transform(df_train)
-    df_test = scaler.transform(df_test)
+    df_train_np = scaler.transform(df_train)
+    df_test_np = scaler.transform(df_test)
 
-    df_train = pd.DataFrame(df_train, columns=df_train.columns, index=df_train.index)
-    df_test = pd.DataFrame(df_test, columns=df_test.columns, index=df_test.index)
+    df_train = pd.DataFrame(df_train_np, columns=df_train.columns, index=df_train.index)
+    df_test = pd.DataFrame(df_test_np, columns=df_test.columns, index=df_test.index)
 
     return df_train, df_test, scaler
 
@@ -154,6 +158,17 @@ def set_data_loaders(config, df_train, df_test):
     return dataloader_train, dataloader_test
 
 
+def create_sub_df(df, selected_columns):
+    if all(item in df.columns for item in selected_columns):
+        return df[selected_columns]
+    else:
+        raise Exception(
+            f"""Not all items are contained in train columns \n
+            Train Columns: {df.columns} \n
+            Selected_columns: {selected_columns}""",
+        )
+
+
 def data_preparation(config):
 
     path_train = config["files"]["training"]
@@ -161,30 +176,19 @@ def data_preparation(config):
 
     df_train, df_test = load_train_test(path_train, path_test)
 
-    selected_columns = list(
-        set(
-            config["features"]["input"]["fiedls"]
-            + config["features"]["input"]["meteo_historical"]
-            + config["features"]["input"]["meteo_forecast"]
-            + config["features"]["output"]
-        )
+    selected_columns = (
+        config["features"]["input"]["fiedls"]
+        + config["features"]["input"]["meteo_historical"]
+        + config["features"]["input"]["meteo_forecast"]
+        + config["features"]["output"]
     )
+    selected_columns = list(dict.fromkeys(selected_columns))
+
     targets = config["features"]["output"]
     output_scale_index = [selected_columns.index(t) for t in targets]
 
-    if all(item in df_train.columns for item in selected_columns):
-        df_train = df_train[selected_columns]
-    else:
-        print("Not all items are contained in train columns")
-        print(f"Train Columns: {df_train.columns}")
-        print(f"Selected_columns: {selected_columns}")
-
-    if all(item in df_test.columns for item in selected_columns):
-        df_test = df_test[selected_columns]
-    else:
-        print("Not all items are contained in train columns")
-        print(f"Train Columns: {df_test.columns}")
-        print(f"Selected_columns: {selected_columns}")
+    df_train = create_sub_df(df_train, selected_columns)
+    df_test = create_sub_df(df_test, selected_columns)
 
     df_train, df_test, scaler = scale_data(df_train, df_test)
     dataloader_train, dataloader_test = set_data_loaders(config, df_train, df_test)
@@ -252,18 +256,16 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
             mse_overEpoches[epoch] = mse_s / count
             test_losses[epoch] = test_loss / count
 
-    return model, loss_mse
+    return model, test_losses
 
 
 def save(config, model, scaler, loss_mse):
 
-    folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
+    print(loss_mse)
 
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-        print("Folder created:", folder_path)
-    else:
-        print("Folder already exists.")
+    folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
+    os.makedirs(folder_path, exist_ok=True)
+    print(f"Folder {folder_path}")
 
     path_model = folder_path + "/weights.pth"
     path_scaler = folder_path + "/scaler.pkl"
@@ -276,6 +278,12 @@ def save(config, model, scaler, loss_mse):
 if __name__ == "__main__":
     set_randomness()
     config = get_config_file()
-    dataloader_train, dataloader_test, scaler = data_preparation(config)
-    model, scaler, loss_mse = train(config, dataloader_train, dataloader_test)
+    dataloader_train, dataloader_test, scaler, output_scale_index = data_preparation(
+        config
+    )
+    model, loss_mse = train(
+        config, dataloader_train, dataloader_test, output_scale_index, scaler
+    )
     save(config, model, scaler, loss_mse)
+
+# %%

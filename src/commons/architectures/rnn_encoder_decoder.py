@@ -1,3 +1,9 @@
+from dotenv import load_dotenv
+import sys, os
+
+load_dotenv()
+sys.path.append(os.getenv("PYTHONPATH"))
+
 import torch
 from torch import nn
 
