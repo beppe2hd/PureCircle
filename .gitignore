@@ -6,3 +6,4 @@ out.json
 **/data
 .vscode/**
 .env
+.DS_Store
