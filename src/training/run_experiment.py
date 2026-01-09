@@ -20,16 +20,8 @@ load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
 
 from src.commons.trainingObjects.loadObj import load_Optimizer, load_Loss
-from src.commons.architectures.create_model import create_model
-
-
-def get_config_file():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--configFile", type=str, required=True)
-    args = parser.parse_args()
-    with open(args.configFile, "r") as f:
-        config = yaml.safe_load(f)
-    return config
+from src.commons.architectures.model_handler import create_model
+from src.commons.utils import get_config_file
 
 
 def set_randomness():

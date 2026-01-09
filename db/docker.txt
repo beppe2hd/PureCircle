@@ -1,0 +1,12 @@
+docker run -d \                                       
+  --name second_season \
+  -e MYSQL_ROOT_PASSWORD=password \
+  -e MYSQL_DATABASE=field_data \
+  -p 3306:3306 \
+  mysql:8.0
+
+
+docker exec -it second_season mysql -u root -ppassword
+
+to execute the file db creation 
+docker exec -i second_season mysql -u root -ppassword < create_query.sql

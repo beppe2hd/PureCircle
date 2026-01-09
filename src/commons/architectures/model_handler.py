@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import sys, os
+import torch
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
@@ -32,3 +33,9 @@ def create_model(config):
             )
 
             return model
+
+
+def inference(model, x, x_f):
+    with torch.inference_mode():
+        y = model(x.unsqueeze(0), x_f.unsqueeze(0))
+        return y.squeeze().detach().numpy()
