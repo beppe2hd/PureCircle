@@ -45,3 +45,8 @@ Each measurement:
 |FIELD → SOIL_MOISTURE	| 1 : N |
 |FIELD → IRRIGATION |	1 : N |
 |FIELD → LAI |	1 : N |
+
+
+Initialization of the database for test:
+
+docker exec -i second_season mysql -u root -ppassword < create_query.sql

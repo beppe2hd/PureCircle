@@ -65,6 +65,8 @@ def forecast():
         start_dt=start_dt_historical,
         end_dt=end_dt_historical,
     )
+    print(historical_sensor_data[0])
+
 
     meteo_data_historical = retrieve_meteo_data(
         mode="historical",

@@ -69,7 +69,7 @@ def retrieve_meteo_data(mode, features, lat, lon, start_dt="", end_dt=""):
     return pd.DataFrame(data=hourly_data)
 
 
-def retrive_sensor_data(host, user, password, database, features, start_dt, end_dt):
+def retrive_sensor_data_old(host, user, password, database, features, start_dt, end_dt):
 
     conn = mysql.connector.connect(
         host=host, user=user, password=password, database=database
@@ -97,3 +97,77 @@ def retrive_sensor_data(host, user, password, database, features, start_dt, end_
     conn.close()
 
     return rows
+
+
+def retrive_sensor_data(host, user, password, database, features, start_dt, end_dt, sensor_id):
+    
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="password",
+        database="irrigation_db"
+    )
+
+    cursor = conn.cursor(dictionary=True)
+
+    query = f"""
+    SELECT ts, lai
+    FROM lai
+    WHERE ts < CURDATE() AND field_id = 2
+    ORDER BY ts ASC;
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    df = pd.DataFrame(rows, columns=['ts','lai'])
+    df["ts"] = pd.to_datetime(df["ts"])
+    full_index = pd.date_range(start=df['ts'][0], end=end_dt, freq="h")
+    df = df.set_index("ts")
+    df = df.reindex(full_index)
+    df = df.interpolate()
+    filtered_df = df.loc[start_dt: end_dt]
+    lai = filtered_df['lai'].to_list()
+
+    zones = {'s_b', 's_w'}
+
+    outSensor = {}
+    for zone in zones:
+        query = f"""
+        SELECT ts, water_content
+        FROM soil_moisture
+        WHERE sensor_zone = '{zone}' and ts BETWEEN %s AND %s AND field_id = 2;
+        """
+
+        cursor.execute(query, (start_dt, end_dt))
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(rows, columns=['ts','water_content'])
+        df["ts"] = pd.to_datetime(df["ts"])
+        df["ts"] = df["ts"].dt.round('h')
+        df = df.groupby('ts').mean()
+        
+        outSensor[zone] = df['water_content']
+
+    query = f"""
+    SELECT ts, water_volume
+    FROM irrigation
+    WHERE ts BETWEEN %s AND %s AND field_id = 2;
+    """
+
+    cursor.execute(query)#, (start_dt, end_dt))
+    rows = cursor.fetchall()
+    rows
+
+    if len(rows)==0:
+        irr = len(full_index) * [0.0]
+    else:
+        df = pd.DataFrame(rows, columns=['ts', 'water_volume'])
+        df["ts"] = pd.to_datetime(df["ts"])
+        full_index = pd.date_range(start=start_dt, end=end_dt, freq="h")
+        df = df.set_index('ts')
+        df = df.reindex(full_index)
+        df.fillna(0.0, inplace=True)
+        print(df)
+
+

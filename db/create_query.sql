@@ -10,8 +10,8 @@ CREATE TABLE field (
 CREATE TABLE soil_moisture (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     ts TIMESTAMP NOT NULL,
-    sensor_zone BOOLEAN NOT NULL,
-    water_content NUMERIC(5,4) NOT NULL,
+    sensor_zone VARCHAR(5) NOT NULL,
+    water_content DOUBLE NOT NULL,
     field_id INT NOT NULL,
     CONSTRAINT fk_soil_field FOREIGN KEY (field_id)
         REFERENCES field(id) ON DELETE CASCADE,
@@ -21,7 +21,7 @@ CREATE TABLE soil_moisture (
 CREATE TABLE irrigation (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     ts TIMESTAMP NOT NULL,
-    water_volume NUMERIC(8,2) NOT NULL,
+    water_volume DOUBLE NOT NULL,
     field_id INTEGER NOT NULL,
     CONSTRAINT fk_irrigation_field FOREIGN KEY (field_id)
         REFERENCES field(id) ON DELETE CASCADE,
@@ -31,7 +31,7 @@ CREATE TABLE irrigation (
 CREATE TABLE lai (
     iid BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     ts TIMESTAMP NOT NULL,
-    lai NUMERIC(4,2) NOT NULL,
+    lai DOUBLE NOT NULL,
     field_id INTEGER NOT NULL,
     CONSTRAINT fk_lai_field FOREIGN KEY (field_id)
         REFERENCES field(id) ON DELETE CASCADE,
