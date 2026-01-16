@@ -49,4 +49,6 @@ Each measurement:
 
 Initialization of the database for test:
 
-docker exec -i second_season mysql -u root -ppassword < create_query.sql
+1) docker exec -i second_season mysql -u root -ppassword < create_query.sql
+2) apply the query in fill_fields.sql
+3) use fill_data.ipynb to fill the other tables

@@ -3,29 +3,13 @@ import openmeteo_requests
 from retry_requests import retry
 import requests_cache
 import pandas as pd
+import numpy as np
 
 
 def retrieve_meteo_data(mode, features, lat, lon, start_dt="", end_dt=""):
     cache_session = requests_cache.CachedSession(".cache", expire_after=3600)
     retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
     openmeteo = openmeteo_requests.Client(session=retry_session)
-
-    # features = [
-    #     "temperature_2m",
-    #     "relative_humidity_2m",
-    #     "cloud_cover",
-    #     "wind_speed_10m",
-    #     "wind_direction_100m",
-    #     "soil_temperature_0_to_7cm",
-    #     "soil_temperature_7_to_28cm",
-    #     "soil_temperature_28_to_100cm",
-    #     "rain",
-    #     "precipitation",
-    #     "evapotranspiration",
-    # ]
-
-    # Make sure all required weather variables are listed here
-    # The order of variables in hourly or daily is important to assign them correctly below
 
     if mode == "historical":
         url = "https://archive-api.open-meteo.com/v1/archive"
@@ -47,11 +31,7 @@ def retrieve_meteo_data(mode, features, lat, lon, start_dt="", end_dt=""):
         }
 
     responses = openmeteo.weather_api(url, params=params)
-
-    # Process first location. Add a for-loop for multiple locations or weather models
     response = responses[0]
-
-    # Process hourly data. The order of variables needs to be the same as requested.
     hourly = response.Hourly()
 
     hourly_data = {
@@ -69,64 +49,38 @@ def retrieve_meteo_data(mode, features, lat, lon, start_dt="", end_dt=""):
     return pd.DataFrame(data=hourly_data)
 
 
-def retrive_sensor_data_old(host, user, password, database, features, start_dt, end_dt):
 
+
+
+def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_id):
+    
     conn = mysql.connector.connect(
         host=host, user=user, password=password, database=database
     )
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
-    features_to_retrieve = [item for item in features]
-    # s_a, s_b, irr, LAI
-    if "datetime" not in features_to_retrieve:
-        features_to_retrieve.append("datetime")
-    features_to_retrieve = ", ".join(features_to_retrieve)
-
-    query = f"""
-    SELECT {features_to_retrieve}
-    FROM sensor_data
-    WHERE datetime BETWEEN %s AND %s
-    ORDER BY datetime ASC;
-    """
-
-    cursor.execute(query, (start_dt, end_dt))
-    rows = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return rows
-
-
-def retrive_sensor_data(host, user, password, database, features, start_dt, end_dt, sensor_id):
-    
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="password",
-        database="irrigation_db"
-    )
-
-    cursor = conn.cursor(dictionary=True)
+    full_index = pd.date_range(start=start_dt, end=end_dt, freq="h")
+    print(f"ciaoooooo{len(full_index)}/n/n/n")
 
     query = f"""
     SELECT ts, lai
     FROM lai
-    WHERE ts < CURDATE() AND field_id = 2
+    WHERE ts < CURDATE() AND field_id = {field_id}
     ORDER BY ts ASC;
     """
 
     cursor.execute(query)
-    rows = cursor.fetchall()
+    lai = cursor.fetchall()
 
-    df = pd.DataFrame(rows, columns=['ts','lai'])
+    df = pd.DataFrame(lai, columns=['ts','lai'])
+    full_index_lai = pd.date_range(start=df['ts'][0], end=end_dt, freq="h")
     df["ts"] = pd.to_datetime(df["ts"])
-    full_index = pd.date_range(start=df['ts'][0], end=end_dt, freq="h")
     df = df.set_index("ts")
-    df = df.reindex(full_index)
+    df = df.reindex(full_index_lai)
     df = df.interpolate()
     filtered_df = df.loc[start_dt: end_dt]
+    print(filtered_df)
     lai = filtered_df['lai'].to_list()
 
     zones = {'s_b', 's_w'}
@@ -136,7 +90,7 @@ def retrive_sensor_data(host, user, password, database, features, start_dt, end_
         query = f"""
         SELECT ts, water_content
         FROM soil_moisture
-        WHERE sensor_zone = '{zone}' and ts BETWEEN %s AND %s AND field_id = 2;
+        WHERE sensor_zone = '{zone}' and ts BETWEEN %s AND %s AND field_id = {field_id};
         """
 
         cursor.execute(query, (start_dt, end_dt))
@@ -152,12 +106,11 @@ def retrive_sensor_data(host, user, password, database, features, start_dt, end_
     query = f"""
     SELECT ts, water_volume
     FROM irrigation
-    WHERE ts BETWEEN %s AND %s AND field_id = 2;
+    WHERE ts BETWEEN %s AND %s AND field_id = {field_id};
     """
 
-    cursor.execute(query)#, (start_dt, end_dt))
+    cursor.execute(query, (start_dt, end_dt))
     rows = cursor.fetchall()
-    rows
 
     if len(rows)==0:
         irr = len(full_index) * [0.0]
@@ -168,6 +121,72 @@ def retrive_sensor_data(host, user, password, database, features, start_dt, end_
         df = df.set_index('ts')
         df = df.reindex(full_index)
         df.fillna(0.0, inplace=True)
-        print(df)
+        irr = df['water_volume'].to_list()
+    
+
+    elements = []
+    for i in range(len(irr)):
+        elements.append({'s_b': np.float32(outSensor['s_b'][i]), 's_w': np.float32(outSensor['s_b'][i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
+
+    return elements
+
+def write_irrigation(host, user, password, database, date, water_volume, field_id):
+    
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+    cursor = conn.cursor(dictionary=True)
+
+    query = f"""
+    INSERT INTO irrigation (ts, water_volume, field_id)
+    VALUES (%s, %s, %s);
+    """
+
+    cursor.execute(query, (date, water_volume, field_id))
+    conn.commit()
+    print(f"Inserted 1 row. ID: {cursor.lastrowid}")
+
+    cursor.close()
+    conn.close()
+
+def write_lai(host, user, password, database, date, lai, field_id):
+    
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+    cursor = conn.cursor(dictionary=True)
+
+    query = f"""
+    INSERT INTO lai (ts, lai, field_id)
+    VALUES (%s, %s, %s);
+    """
+
+    cursor.execute(query, (date, lai, field_id))
+    conn.commit()
+    print(f"Inserted 1 row. ID: {cursor.lastrowid}")
+
+    cursor.close()
+    conn.close()
+
+def retriev_field_list(host, user, password, database):
+    
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+
+    cursor = conn.cursor()
+
+    query = f"""
+    SELECT id FROM field;
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return rows
+    
 
 

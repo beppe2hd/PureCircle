@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import sys, os
 from dotenv import load_dotenv
 import torch
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
@@ -11,6 +12,9 @@ from src.commons.architectures.model_handler import create_model, inference
 from src.inference.api.src.external_resource import (
     retrive_sensor_data,
     retrieve_meteo_data,
+    write_irrigation,
+    write_lai,
+    retriev_field_list,
 )
 from src.commons.utils import (
     get_config_file,
@@ -29,16 +33,22 @@ async def lifespan(app: FastAPI):
     app.state.config = config
 
     yield
-
-    # optional cleanup
     del model
 
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/forecast")
-def forecast():
+
+@app.get("/forecast")
+def forecast(field_id: int):
     model = app.state.model
     config = app.state.config
 
@@ -61,12 +71,11 @@ def forecast():
         user=os.getenv("user"),
         password=os.getenv("password"),
         database=os.getenv("database"),
-        features=fields_feaures,
         start_dt=start_dt_historical,
         end_dt=end_dt_historical,
+        field_id=field_id,
     )
     print(historical_sensor_data[0])
-
 
     meteo_data_historical = retrieve_meteo_data(
         mode="historical",
@@ -105,4 +114,52 @@ def forecast():
     x_f = torch.tensor(x_f)
     y = inference(model, x, x_f)
 
-    return {"output": y.tolist()}
+    return {
+        "list1": list(zip(*y.tolist()))[0],
+        "list2": list(zip(*y.tolist()))[1],
+    }
+
+
+@app.post("/add_irr")
+def forecast(field_id: int, date: str, water_volume: float):
+
+    write_irrigation(
+        host=os.getenv("host"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        database=os.getenv("database"),
+        date=date,
+        water_volume=water_volume,
+        field_id=field_id,
+    )
+
+    return {"output": "ok"}
+
+
+@app.post("/add_lai")
+def forecast(field_id: int, date: str, lai: float):
+
+    write_lai(
+        host=os.getenv("host"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        database=os.getenv("database"),
+        date=date,
+        lai=lai,
+        field_id=field_id,
+    )
+
+    return {"output": "ok"}
+
+
+@app.get("/field_list")
+def get_field():
+    field_listret = retriev_field_list(
+        host=os.getenv("host"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        database=os.getenv("database"),
+    )
+    field_listret = [i[0] for i in field_listret]
+
+    return {"fields": field_listret}

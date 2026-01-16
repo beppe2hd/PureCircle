@@ -1,0 +1,29 @@
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.chart-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.form input {
+  padding: 6px;
+  flex: 1;
+}
+
+.buttons button {
+  padding: 8px 14px;
+  margin-right: 10px;
+  cursor: pointer;
+}

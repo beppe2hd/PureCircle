@@ -25,7 +25,7 @@ files:
 
 features:
   input:
-    fiedls: ['s_b','s_a','LAI','irr']
+    fiedls: ['s_b','s_w','LAI','irr']
     meteo_historical: ['temperature_2m','relative_humidity_2m','cloud_cover','wind_speed_10m','wind_direction_100m','soil_temperature_0_to_7cm','soil_temperature_7_to_28cm','soil_temperature_28_to_100cm','rain','precipitation','evapotranspiration']
     meteo_forecast: ['temperature_2m_f','relative_humidity_2m_f','cloud_cover_f','wind_speed_10m_f','wind_direction_10m_f','soil_temperature_0cm_f','soil_temperature_6cm_f','soil_temperature_18cm_f','rain_f']
   output: ['s_b','s_w']
