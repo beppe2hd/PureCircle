@@ -15,6 +15,8 @@ export default function IrrigationDashboard() {
   const [fields, setFields] = useState([]);
   const [fieldId, setFieldId] = useState(null);
   const [forecast, setForecast] = useState([]);
+  const [irrigation, setIrrigation] = useState(null);
+
   const styles = {
     page: {
       fontFamily: "Arial, sans-serif",
@@ -103,21 +105,27 @@ export default function IrrigationDashboard() {
       .then((data) => {
         console.log("FORECAST DATA:", data);
 
-        if (!Array.isArray(data.list1) || !Array.isArray(data.list2)) {
+        if (
+          !Array.isArray(data.list1) ||
+          !Array.isArray(data.list2) ||
+          !Array.isArray(data.data_index)
+        ) {
           throw new Error("Invalid forecast response");
         }
 
         const merged = data.list1.map((v, i) => ({
-          hour: i,
+          hour: data.data_index[i],  // 👈 use provided index
           value1: v,
           value2: data.list2[i],
         }));
 
         setForecast(merged);
+        setIrrigation(data.irrigation);
       })
       .catch((err) => {
         console.error("FORECAST FETCH ERROR:", err);
         setForecast([]);
+        setIrrigation(null);
       });
   }, [fieldId]);
 
@@ -167,53 +175,23 @@ export default function IrrigationDashboard() {
           <ResponsiveContainer>
             <LineChart data={forecast}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hour" />
+              <XAxis dataKey="hour" angle={-45} />
               <YAxis />
               <Tooltip />
-              <Line dataKey="value1" />
-              <Line dataKey="value2" />
+              <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
+              <Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <label>
+          {irrigation === 0
+            ? "IRRIGATE"
+            : irrigation === 1
+            ? "NOT IRRIGATE"
+            : ""}
+        </label>
 
       </main>
     </div>
-
-    // <div style={{ maxWidth: 900, margin: "auto", padding: 20 }}>
-
-    //   <h1>Irrigation Dashboard</h1>
-
-    //   {/* -------- FIELD SELECT -------- */}
-    // <div style={{ marginBottom: 20 }}>
-    //   <label>
-    //     Field:&nbsp;
-    //     <select
-    //       value={fieldId ?? ""}
-    //       onChange={(e) => setFieldId(Number(e.target.value))}
-    //     >
-    //       {fields.map((f) => (
-    //         <option key={f} value={f}>
-    //           Field {f}
-    //         </option>
-    //       ))}
-    //     </select>
-    //   </label>
-    // </div>
-
-    // {/* -------- FORECAST CHART -------- */}
-    // <div style={{ width: "100%", height: 300, border: "1px solid #ccc" }}>
-    //   <ResponsiveContainer>
-    //     <LineChart data={forecast}>
-    //       <CartesianGrid strokeDasharray="3 3" />
-    //       <XAxis dataKey="hour" />
-    //       <YAxis />
-    //       <Tooltip />
-    //       <Line dataKey="value1" />
-    //       <Line dataKey="value2" />
-    //     </LineChart>
-    //   </ResponsiveContainer>
-    // </div>
-
-    // </div>
   );
 }

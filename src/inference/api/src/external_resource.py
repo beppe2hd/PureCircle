@@ -128,7 +128,7 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
     for i in range(len(irr)):
         elements.append({'s_b': np.float32(outSensor['s_b'][i]), 's_w': np.float32(outSensor['s_b'][i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
 
-    return elements
+    return elements, full_index
 
 def write_irrigation(host, user, password, database, date, water_volume, field_id):
     

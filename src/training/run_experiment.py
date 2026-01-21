@@ -13,6 +13,7 @@ import yaml
 import argparse
 import os
 import sys
+import json
 
 from dotenv import load_dotenv
 
@@ -22,6 +23,7 @@ sys.path.append(os.getenv("PYTHONPATH"))
 from src.commons.trainingObjects.loadObj import load_Optimizer, load_Loss
 from src.commons.architectures.model_handler import create_model
 from src.commons.utils import get_config_file
+from src.commons.data import inverse_scale_data
 
 
 def set_randomness():
@@ -111,18 +113,6 @@ class TimeSeriesDataset(Dataset):
 
         return x, x_f, y
 
-
-def inverse_scale_data(output, cols, scaler):
-
-    mean = torch.tensor(scaler.mean_[cols])
-    std = torch.tensor(scaler.scale_[cols])
-
-    std = std.view(1, 1, len(cols))  # → shape [1, 2, 1]
-    mean = mean.view(1, 1, len(cols))
-
-    output = output * std + mean
-
-    return output
 
 
 def scale_data(df_train, df_test):
@@ -248,12 +238,14 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
             mse_overEpoches[epoch] = mse_s / count
             test_losses[epoch] = test_loss / count
 
-    return model, test_losses
+    return model, test_losses, mse_overEpoches
 
 
-def save(config, model, scaler, loss_mse):
+def save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches, ):
 
     print(loss_mse)
+    print(mse_overEpoches)
+    print(output_scale_index)
 
     folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
     os.makedirs(folder_path, exist_ok=True)
@@ -261,21 +253,44 @@ def save(config, model, scaler, loss_mse):
 
     path_model = folder_path + "/weights.pth"
     path_scaler = folder_path + "/scaler.pkl"
+    path_scaler_indexs = folder_path + "/scaler_indexs.pkl"
+    path_mse = folder_path + "/mse.json"
     torch.save(model.state_dict(), path_model)
     joblib.dump(scaler, path_scaler)
-
+    joblib.dump(output_scale_index, path_scaler_indexs)
+    with open(path_mse, "w") as f:
+        json.dump(mse_overEpoches.tolist(), f)
     ## complete with a text file reporting information on loss
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run AI pipeline with configuration file"
+    )
+
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to the configuration file (YAML/JSON)"
+    )
+
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     set_randomness()
-    config = get_config_file()
+    args = parse_args()
+    config_path = args.config
+    print(f"running with configuration file: {config_path}")
+    config = get_config_file(config_path)
+    print(config)
+
+    
     dataloader_train, dataloader_test, scaler, output_scale_index = data_preparation(
         config
     )
-    model, loss_mse = train(
+    model, loss_mse, mse_overEpoches = train(
         config, dataloader_train, dataloader_test, output_scale_index, scaler
     )
-    save(config, model, scaler, loss_mse)
+    save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches)
 
-# %%

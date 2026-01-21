@@ -4,11 +4,12 @@ import sys, os
 from dotenv import load_dotenv
 import torch
 from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
 print(os.getenv("PYTHONPATH"))
-from src.commons.architectures.model_handler import create_model, inference
+from src.commons.architectures.model_handler import create_model, inference, load_weights_and_scale
 from src.inference.api.src.external_resource import (
     retrive_sensor_data,
     retrieve_meteo_data,
@@ -27,13 +28,17 @@ from src.commons.utils import (
 async def lifespan(app: FastAPI):
     config = get_config_file(os.getenv("configFile"))
     model = create_model(config)
+    model, scaler, output_scale_index = load_weights_and_scale(model, config)
     model.eval()
 
     app.state.model = model
     app.state.config = config
+    app.state.scaler = scaler
+    app.state.output_scale_index = output_scale_index
+
 
     yield
-    del model
+    del model, scaler, output_scale_index
 
 
 app = FastAPI(lifespan=lifespan)
@@ -51,6 +56,8 @@ app.add_middleware(
 def forecast(field_id: int):
     model = app.state.model
     config = app.state.config
+    scaler = app.state.scaler
+    output_scale_index = app.state.output_scale_index
 
     start_dt_historical, end_dt_historical = get_start_end_date(
         config["features"]["input_seq_len"], "past"
@@ -66,7 +73,7 @@ def forecast(field_id: int):
     lat = config["features"]["geo_coordinate"]["lat"]
     lon = config["features"]["geo_coordinate"]["lon"]
 
-    historical_sensor_data = retrive_sensor_data(
+    historical_sensor_data, date_index = retrive_sensor_data(
         host=os.getenv("host"),
         user=os.getenv("user"),
         password=os.getenv("password"),
@@ -112,11 +119,24 @@ def forecast(field_id: int):
     # Convert to NumPy array for convenience
     x = torch.tensor(x)
     x_f = torch.tensor(x_f)
-    y = inference(model, x, x_f)
+    y = inference(model, x, x_f, output_scale_index, scaler)
+    
+    date_index = [d.strftime('%m-%d %H') for d in date_index.to_list()]
+    list1 = list(list(zip(*y.tolist()))[0])
+    list2 = list(list(zip(*y.tolist()))[1])
+
+
+    irrigation = 0
+    if np.array(list1).mean()<22:
+        irrigation = 1
+
+
 
     return {
-        "list1": list(zip(*y.tolist()))[0],
-        "list2": list(zip(*y.tolist()))[1],
+        "list1": list1,
+        "list2": list2,
+        "data_index": date_index,
+        "irrigation": irrigation
     }
 
 

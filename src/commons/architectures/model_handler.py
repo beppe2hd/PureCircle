@@ -1,11 +1,14 @@
 from dotenv import load_dotenv
 import sys, os
 import torch
+import joblib
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
 
-available_models = ["RNN"]
+from src.commons.data import inverse_scale_data
+
+available_models = ["RNN", "LSTM"]
 
 
 def create_model(config):
@@ -33,9 +36,47 @@ def create_model(config):
             )
 
             return model
+        
+        if model_type == "LSTM":
+
+            from src.commons.architectures.lstm_encoder_decoder import Seq2Seq
+
+            input_size = len(
+                config["features"]["input"]["fiedls"]
+                + config["features"]["input"]["meteo_historical"]
+            )
+            output_size = len(config["features"]["output"])
+            hidden_size = config["architecture"]["hidden"]
+            forecast_size = len(config["features"]["input"]["meteo_forecast"])
+
+            output_seq_len = config["features"]["output_seq_len"]
+
+            model = Seq2Seq(
+                input_size, output_size, hidden_size, forecast_size, output_seq_len
+            )
+
+            return model
+            
 
 
-def inference(model, x, x_f):
+def inference(model, x, x_f, output_scale_index, scaler):
     with torch.inference_mode():
         y = model(x.unsqueeze(0), x_f.unsqueeze(0))
+        y = inverse_scale_data(y, output_scale_index, scaler)
         return y.squeeze().detach().numpy()
+    
+def load_weights_and_scale(model, config):
+
+    folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
+
+    path_model = folder_path + "/weights.pth"
+    path_scaler = folder_path + "/scaler.pkl"
+    path_scaler_indexs = folder_path + "/scaler_indexs.pkl"
+
+    state_dict = torch.load(path_model, map_location="cpu")
+    model.load_state_dict(state_dict)
+
+    scaler = joblib.load(path_scaler)
+    output_scale_index = joblib.load(path_scaler_indexs)
+
+    return model, scaler, output_scale_index
