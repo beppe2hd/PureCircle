@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
+import FloatingLabel from 'react-bootstrap/FloatingLabel';
 
 
 export default function IrrigationDashboard() {
@@ -14,46 +22,7 @@ export default function IrrigationDashboard() {
     now.setHours(6, 0, 0, 0); // 06:00:00.000
     return now.toISOString().slice(0, 16);
   });
-  const styles = {
-    page: {
-      fontFamily: "Arial, sans-serif",
-      minHeight: "100vh",
-      backgroundColor: "#f4f6f8",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "12px 24px",
-      backgroundColor: "#1f2937",
-      color: "white",
-    },
-    logo: {
-      margin: 0,
-    },
-    nav: {
-      display: "flex",
-      gap: "16px",
-    },
-    link: {
-      color: "white",
-      textDecoration: "none",
-      fontWeight: "bold",
-    },
-    main: {
-      padding: "40px",
-      display: "flex",
-      justifyContent: "center",
-    },
-    card: {
-      backgroundColor: "white",
-      padding: "24px",
-      borderRadius: "8px",
-      width: "100%",
-      maxWidth: "600px",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-    },
-  };
+
 
   /* ---------------- FETCH FIELD LIST ---------------- */
   useEffect(() => {
@@ -114,76 +83,105 @@ export default function IrrigationDashboard() {
 
   /* ---------------- RENDER ---------------- */
   return (
-    <div style={styles.page}>
-      {/* Barra superiore */}
-      <header style={styles.header}>
-        <h2 style={styles.logo}>Pure Circle</h2>
+    <>
+      <Navbar bg="dark" data-bs-theme="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="/">Purecircle</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              <Nav.Link href="/">Home</Nav.Link>
+              <Nav.Link href="/inserdata">Insert Data</Nav.Link>
+              <Nav.Link href="/readsm">Read SM</Nav.Link>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-        <nav style={styles.nav}>
-          <Link to="/" style={styles.link}>
-            Home
-          </Link>
-          <Link to="/inserdata" style={styles.link}>
-            Inserisci Dati
-          </Link>
-          <Link to="/readsm" style={styles.link}>
-            Leggi SM
-          </Link>
-        </nav>
-      </header>
+      <Container fluid>
+        <Row>
+          <Col>
+            <Container>
+              <Row>
+                <Col className="text-center">
 
-      {/* Contenuto principale */}
-      <main style={styles.main}>
-        {/* -------- FIELD SELECT -------- */}
-        <div style={{ marginBottom: 20 }}>
-          <label>
-            Field:&nbsp;
-            <select
-              value={fieldId ?? ""}
-              onChange={(e) => setFieldId(Number(e.target.value))}
-            >
-              {fields.map((f) => (
-                <option key={f} value={f}>
-                  Field {f}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+                  {/* Contenuto principale */}
+>
+                  {/* -------- FIELD SELECT -------- */}
+                  <Row className="justify-content-center my-4">
+                    <Col md="4">
+                      <Form.Select
+                        size="lg"
+                        value={fieldId ?? ""}
+                        onChange={(e) => setFieldId(Number(e.target.value))}
+                      >
+                        {fields.map((f) => (
+                          <option key={f} value={f}>
+                            Field {f}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                  </Row>
 
-        {/* -------- INPUTS -------- */}
-        <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-          <input
-            type="number"
-            placeholder="Water volume"
-            value={waterVolume}
-            onChange={(e) => setWaterVolume(e.target.value)}
-          />
 
-          <input
-            type="number"
-            placeholder="LAI"
-            value={lai}
-            onChange={(e) => setLai(e.target.value)}
-          />
+                  <FloatingLabel
+                    controlId="water-volume"
+                    label="Water volume"
+                    className="mb-3"
+                  >
+                    <Form.Control type="number" placeholder="Water volume" value={waterVolume}
+                      onChange={(e) => setWaterVolume(e.target.value)} />
+                  </FloatingLabel>
+                  <FloatingLabel
+                    controlId="lai"
+                    label="LAI"
+                    className="mb-3"
+                  >
+                    <Form.Control type="number" placeholder="LAI" value={lai}
+                      onChange={(e) => setLai(e.target.value)} />
+                  </FloatingLabel>
 
-          <input
-            type="datetime-local"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
+                  {/* -------- INPUTS -------- */}
+                  <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+                    {/* <input
+                      type="number"
+                      placeholder="Water volume"
+                      value={waterVolume}
+                      onChange={(e) => setWaterVolume(e.target.value)}
+                    />
 
-        {/* -------- BUTTONS -------- */}
-        <div style={{ marginTop: 15 }}>
-          <button onClick={addIrrigation} style={{ marginRight: 10 }}>
-            Add Irrigation
-          </button>
-          <button onClick={addLai}>Add LAI</button>
-        </div>
+                    <input
+                      type="number"
+                      placeholder="LAI"
+                      value={lai}
+                      onChange={(e) => setLai(e.target.value)}
+                    /> */}
 
-      </main>
-    </div>
+                    <input
+                      type="datetime-local"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
+
+                  {/* -------- BUTTONS -------- */}
+                  <div style={{ marginTop: 15 }}>
+                    <button onClick={addIrrigation} style={{ marginRight: 10 }}>
+                      Add Irrigation
+                    </button>
+                    <button onClick={addLai}>Add LAI</button>
+                  </div>
+
+                </Col>
+              </Row>
+            </Container>
+          </Col>
+        </Row>
+      </Container>
+    </>
+
+
     // <div style={{ maxWidth: 900, margin: "auto", padding: 20 }}>
     //   <h1>Irrigation Dashboard</h1>
 

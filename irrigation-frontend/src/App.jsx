@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import InfoPage from "./InfoPage";
 import InserData from "./InserData";
 import ReadSM from "./ReadSM";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (

@@ -9,6 +9,13 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import Form from 'react-bootstrap/Form';
+import Alert from 'react-bootstrap/Alert';
 
 export default function IrrigationDashboard() {
   /* ---------------- STATE ---------------- */
@@ -16,48 +23,6 @@ export default function IrrigationDashboard() {
   const [fieldId, setFieldId] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [irrigation, setIrrigation] = useState(null);
-
-  const styles = {
-    page: {
-      fontFamily: "Arial, sans-serif",
-      minHeight: "100vh",
-      backgroundColor: "#f4f6f8",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "12px 24px",
-      backgroundColor: "#1f2937",
-      color: "white",
-    },
-    logo: {
-      margin: 0,
-    },
-    nav: {
-      display: "flex",
-      gap: "16px",
-    },
-    link: {
-      color: "white",
-      textDecoration: "none",
-      fontWeight: "bold",
-    },
-    main: {
-      padding: "40px",
-      display: "flex",
-      justifyContent: "center",
-    },
-    card: {
-      backgroundColor: "white",
-      padding: "24px",
-      borderRadius: "8px",
-      width: "100%",
-      maxWidth: "600px",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-    },
-  };
-
 
 
   /* ---------------- FETCH FIELD LIST ---------------- */
@@ -133,65 +98,85 @@ export default function IrrigationDashboard() {
   /* ---------------- RENDER ---------------- */
   return (
 
-    <div style={styles.page}>
-      {/* Barra superiore */}
-      <header style={styles.header}>
-        <h2 style={styles.logo}>Pure Circle</h2>
+    <>
+      <Navbar bg="dark" data-bs-theme="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="/">Purecircle</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              <Nav.Link href="/">Home</Nav.Link>
+              <Nav.Link href="/inserdata">Insert Data</Nav.Link>
+              <Nav.Link href="/readsm">Read SM</Nav.Link>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-        <nav style={styles.nav}>
-          <Link to="/" style={styles.link}>
-            Home
-          </Link>
-          <Link to="/inserdata" style={styles.link}>
-            Inserisci Dati
-          </Link>
-          <Link to="/readsm" style={styles.link}>
-            Leggi SM
-          </Link>
-        </nav>
-      </header>
+      <Container fluid>
+        <Row>
+          <Col>
+            <Container>
+              <Row>
+                <Col className="text-center">
 
-      {/* Contenuto principale */}
-      <main style={styles.main}>
-        {/* -------- FIELD SELECT -------- */}
-        <div style={{ marginBottom: 20 }}>
-          <label>
-            Field:&nbsp;
-            <select
-              value={fieldId ?? ""}
-              onChange={(e) => setFieldId(Number(e.target.value))}
-            >
-              {fields.map((f) => (
-                <option key={f} value={f}>
-                  Field {f}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
 
-        {/* -------- FORECAST CHART -------- */}
-        <div style={{ width: "100%", height: 300, border: "1px solid #ccc" }}>
-          <ResponsiveContainer>
-            <LineChart data={forecast}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hour" angle={-45} />
-              <YAxis />
-              <Tooltip />
-              <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
-              <Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <label>
-          {irrigation === 0
-            ? "IRRIGATE"
-            : irrigation === 1
-            ? "NOT IRRIGATE"
-            : ""}
-        </label>
+                  {/* -------- FIELD SELECT -------- */}
+                  <Row className="justify-content-center my-4">
+                    <Col md="4">
+                      <Form.Select
+                        size="lg"
+                        value={fieldId ?? ""}
+                        onChange={(e) => setFieldId(Number(e.target.value))}
+                      >
+                        {fields.map((f) => (
+                          <option key={f} value={f}>
+                            Field {f}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                  </Row>
 
-      </main>
-    </div>
+
+                  {/* -------- FORECAST CHART -------- */}
+                  <Row>
+                    <Col>
+                      <div style={{ width: "100%", height: 300, border: "1px solid #ccc" }}>
+                        <ResponsiveContainer>
+                          <LineChart data={forecast}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="hour" angle={-45} />
+                            <YAxis />
+                            <Tooltip />
+                            <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
+                            <Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row className="justify-content-center my-4">
+                    <Col md="4">
+                      {irrigation === 0
+                        ? <Alert variant="primary">
+                          Irrigate
+                        </Alert>
+                        : irrigation === 1
+                          ? <Alert variant="secondary">
+                            Not Irrigate
+                          </Alert>
+                          : ""}
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
+            </Container>
+          </Col>
+        </Row>
+      </Container>
+    </>
+
+
   );
 }

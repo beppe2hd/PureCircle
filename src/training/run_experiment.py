@@ -247,7 +247,7 @@ def save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches, )
     print(mse_overEpoches)
     print(output_scale_index)
 
-    folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
+    folder_path = "./src/weights/" + config["name"] + config["version"].replace(".", "_")
     os.makedirs(folder_path, exist_ok=True)
     print(f"Folder {folder_path}")
 

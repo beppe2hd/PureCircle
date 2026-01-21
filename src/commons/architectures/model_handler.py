@@ -67,7 +67,7 @@ def inference(model, x, x_f, output_scale_index, scaler):
     
 def load_weights_and_scale(model, config):
 
-    folder_path = "./weights/" + config["name"] + config["version"].replace(".", "_")
+    folder_path = "./src/weights/" + config["name"] + config["version"].replace(".", "_")
 
     path_model = folder_path + "/weights.pth"
     path_scaler = folder_path + "/scaler.pkl"
