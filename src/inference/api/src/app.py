@@ -16,6 +16,8 @@ from src.inference.api.src.external_resource import (
     write_irrigation,
     write_lai,
     retriev_field_list,
+    retriev_last_irr,
+    retriev_last_lai
 )
 from src.commons.utils import (
     get_config_file,
@@ -183,3 +185,27 @@ def get_field():
     field_listret = [i[0] for i in field_listret]
 
     return {"fields": field_listret}
+
+@app.get("/last_irr")
+def get_last_irr():
+    last_irr = retriev_last_irr(
+        host=os.getenv("host"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        database=os.getenv("database"),
+    )
+    #last_irr = [i[0] for i in last_irr]
+
+    return {"last_irr": last_irr}
+
+@app.get("/last_lai")
+def get_last_lai():
+    last_lai = retriev_last_lai(
+        host=os.getenv("host"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        database=os.getenv("database"),
+    )
+    #last_lai = [i[0] for i in last_lai]
+
+    return {"last_lai": last_lai}

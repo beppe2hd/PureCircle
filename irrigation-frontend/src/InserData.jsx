@@ -8,6 +8,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
+import Button from 'react-bootstrap/Button';
+import { Table } from "react-bootstrap";
 
 
 export default function IrrigationDashboard() {
@@ -22,6 +24,30 @@ export default function IrrigationDashboard() {
     now.setHours(6, 0, 0, 0); // 06:00:00.000
     return now.toISOString().slice(0, 16);
   });
+  const [lastLaiData, setLastLaiData] = useState([]);
+  const [lastIrrData, setLastIrrData] = useState([]);
+
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/last_lai")
+      .then((res) => res.json())
+      .then((data) => {
+        // data.last_irr è un array di array [data, lai, field]
+        setLastLaiData(data.last_lai || []);
+      })
+      .catch((err) => console.error("Error fetching LAI data:", err));
+  }, []);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/last_irr")
+      .then((res) => res.json())
+      .then((data) => {
+        // data.last_irr è un array di array [data, lai, field]
+        setLastIrrData(data.last_irr || []);
+      })
+      .catch((err) => console.error("Error fetching LAI data:", err));
+  }, []);
+
 
 
   /* ---------------- FETCH FIELD LIST ---------------- */
@@ -105,10 +131,122 @@ export default function IrrigationDashboard() {
               <Row>
                 <Col className="text-center">
 
-                  {/* Contenuto principale */}
->
-                  {/* -------- FIELD SELECT -------- */}
+                  {/* SELECT + DATE ON SAME ROW */}
                   <Row className="justify-content-center my-4">
+                    <Col md={4}>
+                      <Form.Select
+                        size="lg"
+                        value={fieldId ?? ""}
+                        onChange={(e) => setFieldId(Number(e.target.value))}
+                      >
+                        {fields.map((f) => (
+                          <option key={f} value={f}>
+                            Field {f}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+
+                    <Col md={4}>
+                      <FloatingLabel
+                        controlId="datetime"
+                        label="DateTime"
+                        className="mb-3"
+                      >
+                        <Form.Control
+                          type="datetime-local"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                        />
+                      </FloatingLabel>
+                    </Col>
+                  </Row>
+
+                  {/* IRRIGATION INPUT + BUTTON */}
+                  <Row className="mb-3">
+                    <Col md={8}>
+                      <FloatingLabel
+                        controlId="water-volume"
+                        label="Water volume"
+                        className="mb-3"
+                      >
+                        <Form.Control
+                          type="number"
+                          placeholder="Water volume"
+                          value={waterVolume}
+                          onChange={(e) => setWaterVolume(e.target.value)}
+                        />
+                      </FloatingLabel>
+                    </Col>
+                    <Col md={4} className="d-flex align-items-end">
+                      <Button variant="primary" className="w-100" onClick={addIrrigation}>
+                        Add Irrigation
+                      </Button>
+                    </Col>
+                  </Row>
+
+                  {/* LAI INPUT + BUTTON */}
+                  <Row className="mb-3">
+                    <Col md={8}>
+                      <FloatingLabel
+                        controlId="lai"
+                        label="LAI"
+                        className="mb-3"
+                      >
+                        <Form.Control
+                          type="number"
+                          placeholder="LAI"
+                          value={lai}
+                          onChange={(e) => setLai(e.target.value)}
+                        />
+                      </FloatingLabel>
+                    </Col>
+                    <Col md={4} className="d-flex align-items-end">
+                      <Button variant="primary" className="w-100" onClick={addLai}>
+                        Add LAI
+                      </Button>
+                    </Col>
+                  </Row>
+
+                  <Table striped bordered hover responsive>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>LAI</th>
+                        <th>Field</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastLaiData.map((row, index) => (
+                        <tr key={index}>
+                          <td>{row[0]}</td>
+                          <td>{parseFloat(row[1]).toFixed(2)}</td>
+                          <td>{row[2]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+
+                  <Table striped bordered hover responsive>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>IRR</th>
+                        <th>Field</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastIrrData.map((row, index) => (
+                        <tr key={index}>
+                          <td>{row[0]}</td>
+                          <td>{parseFloat(row[1]).toFixed(2)}</td>
+                          <td>{row[2]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+>
+                  {/* <Row className="justify-content-center my-4">
                     <Col md="4">
                       <Form.Select
                         size="lg"
@@ -123,7 +261,6 @@ export default function IrrigationDashboard() {
                       </Form.Select>
                     </Col>
                   </Row>
-
 
                   <FloatingLabel
                     controlId="water-volume"
@@ -141,10 +278,22 @@ export default function IrrigationDashboard() {
                     <Form.Control type="number" placeholder="LAI" value={lai}
                       onChange={(e) => setLai(e.target.value)} />
                   </FloatingLabel>
+                  <FloatingLabel
+                    controlId="datetime"
+                    label="DateTime"
+                    className="mb-3"
+                  >
+                    <Form.Control type="datetime-local" value={date}
+                      onChange={(e) => setDate(e.target.value)} />
+                  </FloatingLabel>
 
-                  {/* -------- INPUTS -------- */}
-                  <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-                    {/* <input
+                  <Button variant="primary" onClick={addIrrigation}>Add Irrigation</Button>
+                  <Button variant="primary" onClick={addLai}>Add LAI</Button> */}
+
+
+
+                  {/* <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+                    <input
                       type="number"
                       placeholder="Water volume"
                       value={waterVolume}
@@ -156,22 +305,22 @@ export default function IrrigationDashboard() {
                       placeholder="LAI"
                       value={lai}
                       onChange={(e) => setLai(e.target.value)}
-                    /> */}
+                    />
 
                     <input
                       type="datetime-local"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
-                  </div>
+                  </div> */}
 
-                  {/* -------- BUTTONS -------- */}
+                  {/* -------- BUTTONS --------
                   <div style={{ marginTop: 15 }}>
                     <button onClick={addIrrigation} style={{ marginRight: 10 }}>
                       Add Irrigation
                     </button>
                     <button onClick={addLai}>Add LAI</button>
-                  </div>
+                  </div> */}
 
                 </Col>
               </Row>

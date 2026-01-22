@@ -187,6 +187,78 @@ def retriev_field_list(host, user, password, database):
     conn.close()
 
     return rows
+
+
+
+def retriev_last_irr(host, user, password, database):
+    
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+
+    cursor = conn.cursor()
+
+    query = f"""
+    SELECT ts, water_volume, field_id
+    FROM (
+        SELECT
+            id,
+            ts,
+            water_volume,
+            field_id,
+            ROW_NUMBER() OVER (
+                PARTITION BY field_id
+                ORDER BY ts DESC
+            ) AS rn
+        FROM irrigation
+    ) t
+    WHERE rn <= 2
+    ORDER BY field_id, ts DESC;
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return rows
+
+
+def retriev_last_lai(host, user, password, database):
+    
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+
+    cursor = conn.cursor()
+
+    query = f"""
+    SELECT ts, lai, field_id
+    FROM (
+        SELECT
+            iid,
+            ts,
+            lai,
+            field_id,
+            ROW_NUMBER() OVER (
+                PARTITION BY field_id
+                ORDER BY ts DESC
+            ) AS rn
+        FROM lai
+    ) t
+    WHERE rn <= 2
+    ORDER BY field_id, ts DESC;
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return rows
+
     
 
 
