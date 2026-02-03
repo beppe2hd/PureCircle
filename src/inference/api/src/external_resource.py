@@ -61,7 +61,6 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
     cursor = conn.cursor()
 
     full_index = pd.date_range(start=start_dt, end=end_dt, freq="h")
-    print(f"ciaoooooo{len(full_index)}/n/n/n")
 
     query = f"""
     SELECT ts, lai
@@ -73,6 +72,9 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
     cursor.execute(query)
     lai = cursor.fetchall()
 
+    if len(lai)==0:
+        return [], []
+
     df = pd.DataFrame(lai, columns=['ts','lai'])
     full_index_lai = pd.date_range(start=df['ts'][0], end=end_dt, freq="h")
     df["ts"] = pd.to_datetime(df["ts"])
@@ -80,7 +82,6 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
     df = df.reindex(full_index_lai)
     df = df.interpolate()
     filtered_df = df.loc[start_dt: end_dt]
-    print(filtered_df)
     lai = filtered_df['lai'].to_list()
 
     zones = {'s_b', 's_w'}
@@ -96,11 +97,24 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
         cursor.execute(query, (start_dt, end_dt))
         rows = cursor.fetchall()
 
+        if len(rows)==0:
+            return [], []
+
         df = pd.DataFrame(rows, columns=['ts','water_content'])
         df["ts"] = pd.to_datetime(df["ts"])
         df["ts"] = df["ts"].dt.round('h')
         df = df.groupby('ts').mean()
-        
+        full_index = pd.date_range(start=start_dt, end=end_dt, freq="h")
+        df = df.reindex(full_index)
+        df = df.interpolate()
+        print(df)
+        print('*-*-'*50)
+
+        # df = pd.DataFrame(rows, columns=['ts','water_content'])
+        # df["ts"] = pd.to_datetime(df["ts"])
+        # df["ts"] = df["ts"].dt.round('h')
+        # df = df.groupby('ts').mean()
+     
         outSensor[zone] = df['water_content']
 
     query = f"""
@@ -122,11 +136,10 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
         df = df.reindex(full_index)
         df.fillna(0.0, inplace=True)
         irr = df['water_volume'].to_list()
-    
 
     elements = []
     for i in range(len(irr)):
-        elements.append({'s_b': np.float32(outSensor['s_b'][i]), 's_w': np.float32(outSensor['s_b'][i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
+        elements.append({'s_b': np.float32(outSensor['s_b'].iloc[i]), 's_w': np.float32(outSensor['s_b'].iloc[i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
 
     return elements, full_index
 
@@ -188,8 +201,6 @@ def retriev_field_list(host, user, password, database):
 
     return rows
 
-
-
 def retriev_last_irr(host, user, password, database):
     
     conn = mysql.connector.connect(
@@ -224,8 +235,8 @@ def retriev_last_irr(host, user, password, database):
 
     return rows
 
-
 def retriev_last_lai(host, user, password, database):
+
     
     conn = mysql.connector.connect(
         host=host, user=user, password=password, database=database
@@ -258,6 +269,29 @@ def retriev_last_lai(host, user, password, database):
     conn.close()
 
     return rows
+
+def write_sensor(host, user, password, database, date, plot_id, sensor_zone, water_content):
+    
+
+    conn = mysql.connector.connect(
+        host=host, user=user, password=password, database=database
+    )
+    cursor = conn.cursor()
+
+    query = f"""
+    INSERT INTO soil_moisture (ts, sensor_zone, water_content, field_id)
+    VALUES (%s, %s, %s, %s);
+    """
+
+    data = list(zip(date, sensor_zone, water_content, plot_id))
+
+    cursor.executemany(query, data)
+    conn.commit()
+
+    print(f"Inserted {len(date)} row. ID: {cursor.lastrowid}")
+
+    cursor.close()
+    conn.close()
 
     
 

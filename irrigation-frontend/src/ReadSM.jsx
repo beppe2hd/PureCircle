@@ -23,13 +23,16 @@ export default function IrrigationDashboard() {
   const [fieldId, setFieldId] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [irrigation, setIrrigation] = useState(null);
+  const [irr_dur, setIrr_dur] = useState(null);
+  const [irr_vol, setIrr_vol] = useState(null);
+  const [irr_time, setIrr_time] = useState(null);
 
 
   /* ---------------- FETCH FIELD LIST ---------------- */
   useEffect(() => {
     console.log("FETCHING FIELD LIST");
 
-    fetch("http://127.0.0.1:8000/field_list")
+    fetch("https://api-purecircle.ngrok.app/field_list")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error ${res.status}`);
@@ -60,7 +63,7 @@ export default function IrrigationDashboard() {
 
     console.log("FETCHING FORECAST FOR FIELD", fieldId);
 
-    fetch(`http://127.0.0.1:8000/forecast?field_id=${fieldId}`)
+    fetch(`https://api-purecircle.ngrok.app/forecast?field_id=${fieldId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error ${res.status}`);
@@ -79,13 +82,16 @@ export default function IrrigationDashboard() {
         }
 
         const merged = data.list1.map((v, i) => ({
-          hour: data.data_index[i],  // 👈 use provided index
+          hour: data.data_index[i],  // use provided index
           value1: v,
           value2: data.list2[i],
         }));
 
         setForecast(merged);
         setIrrigation(data.irrigation);
+        setIrr_dur(data.duration);
+        setIrr_vol(data.volume);
+        setIrr_time(data.time);
       })
       .catch((err) => {
         console.error("FORECAST FETCH ERROR:", err);
@@ -158,11 +164,11 @@ export default function IrrigationDashboard() {
                   </Row>
                   <Row className="justify-content-center my-4">
                     <Col md="4">
-                      {irrigation === 0
+                      {irrigation === 1
                         ? <Alert variant="primary">
-                          Irrigate
+                          Irrigate for {irr_dur != null ? irr_dur.toFixed(2) : "-"} minutes befor the next {irr_time != null ? irr_time : "-"} hour/hours
                         </Alert>
-                        : irrigation === 1
+                        : irrigation === 0
                           ? <Alert variant="secondary">
                             Not Irrigate
                           </Alert>

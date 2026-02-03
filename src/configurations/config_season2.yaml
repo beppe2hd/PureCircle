@@ -35,3 +35,12 @@ features:
     lat: 52.52
     lon: 13.41
 
+irr_param:
+  durartio: 
+    a: -4.99
+    b: 137.97
+  volume:
+    a: -3.16
+    b: 87.22
+  threshold: 26.0
+

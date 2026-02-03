@@ -29,7 +29,7 @@ export default function IrrigationDashboard() {
 
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/last_lai")
+    fetch("https://api-purecircle.ngrok.app/last_lai")
       .then((res) => res.json())
       .then((data) => {
         // data.last_irr è un array di array [data, lai, field]
@@ -39,7 +39,7 @@ export default function IrrigationDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/last_irr")
+    fetch("https://api-purecircle.ngrok.app/last_irr")
       .then((res) => res.json())
       .then((data) => {
         // data.last_irr è un array di array [data, lai, field]
@@ -54,7 +54,7 @@ export default function IrrigationDashboard() {
   useEffect(() => {
     console.log("FETCHING FIELD LIST");
 
-    fetch("http://127.0.0.1:8000/field_list")
+    fetch("https://api-purecircle.ngrok.app/field_list")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error ${res.status}`);
@@ -86,7 +86,7 @@ export default function IrrigationDashboard() {
     if (!fieldId) return;
 
     fetch(
-      `http://127.0.0.1:8000/add_irr?field_id=${fieldId}&date=${date.replace(
+      `https://api-purecircle.ngrok.app/add_irr?field_id=${fieldId}&date=${date.replace(
         "T",
         " "
       )}:00&water_volume=${waterVolume}`,
@@ -99,7 +99,7 @@ export default function IrrigationDashboard() {
     if (!fieldId) return;
 
     fetch(
-      `http://127.0.0.1:8000/add_lai?field_id=${fieldId}&date=${date.replace(
+      `https://api-purecircle.ngrok.app/add_lai?field_id=${fieldId}&date=${date.replace(
         "T",
         " "
       )}:00&lai=${lai}`,
@@ -245,7 +245,7 @@ export default function IrrigationDashboard() {
                       ))}
                     </tbody>
                   </Table>
->
+
                   {/* <Row className="justify-content-center my-4">
                     <Col md="4">
                       <Form.Select

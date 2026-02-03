@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 import torch
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
+from pydantic import BaseModel
+from typing import List
+
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
@@ -17,13 +20,20 @@ from src.inference.api.src.external_resource import (
     write_lai,
     retriev_field_list,
     retriev_last_irr,
-    retriev_last_lai
+    retriev_last_lai,
+    write_sensor
 )
 from src.commons.utils import (
     get_config_file,
     get_start_end_date,
     reset_df_start_end_hours,
 )
+
+class SensorReading(BaseModel):
+    id: int
+    time: str
+    sensor: str
+    water_SOIL: float
 
 
 @asynccontextmanager
@@ -47,7 +57,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["https://purecircle.ngrok.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -84,7 +94,9 @@ def forecast(field_id: int):
         end_dt=end_dt_historical,
         field_id=field_id,
     )
-    print(historical_sensor_data[0])
+    
+    if len(historical_sensor_data) == 0:
+        return {}
 
     meteo_data_historical = retrieve_meteo_data(
         mode="historical",
@@ -129,16 +141,37 @@ def forecast(field_id: int):
 
 
     irrigation = 0
-    if np.array(list1).mean()<22:
-        irrigation = 1
+    idx = 0
+    suggested_volume = 0
+    suggested_time = 0
+    dur_a = config["irr_param"]["durartio"]["a"]
+    dur_b = config["irr_param"]["durartio"]["b"]
+    vol_a = config["irr_param"]["volume"]["a"]
+    vol_b = config["irr_param"]["volume"]["b"]
 
+    if np.array(list1).mean()<config["irr_param"]["threshold"]:
+        irrigation = 1
+        list1 = np.array(list1)
+        mask = list1 < config["irr_param"]["threshold"]
+        if mask.any():
+            idx = np.argmax(mask)
+            val = list1[idx]
+  
+        suggested_volume = val*vol_a+vol_b
+        suggested_time = val*dur_a+dur_b
+        suggested_volume = float(suggested_volume)
+        suggested_time = float(suggested_time)
+        idx = int(idx+1)
 
 
     return {
-        "list1": list1,
+        "list1": list1.tolist(),
         "list2": list2,
         "data_index": date_index,
-        "irrigation": irrigation
+        "irrigation": irrigation,
+        "volume": suggested_volume,
+        "duration": suggested_time,
+        "time": idx
     }
 
 
@@ -209,3 +242,41 @@ def get_last_lai():
     #last_lai = [i[0] for i in last_lai]
 
     return {"last_lai": last_lai}
+
+@app.post("/sensor-data")
+def receive_bulk_data(data: List[SensorReading]):
+    host=os.getenv("host"),
+    user=os.getenv("user"),
+    password=os.getenv("password"),
+    database=os.getenv("database"),
+
+    # Here you can store to DB, log, etc.
+    sens_to_field_map = {'sensor_014':['s_w', 5],
+                         'sensor_015':['s_b', 5],
+                         'sensor_032':['s_w', 11],
+                         'sensor_033':['s_b', 11],
+                         'sensor_089':['s_w', 30],
+                         'sensor_090':['s_b', 30],
+                         'sensor_166':['s_w', 32],
+                         'sensor_174':['s_b', 32],
+                         'sensor_172':['s_w', 52],
+                         'sensor_156':['s_b', 52],
+                         'sensor_161':['s_w', 54],
+                         'sensor_162':['s_b', 54]
+                         }
+    
+    sensor_id = []
+    ts = []
+    sm = []
+    plot = []
+    zone = []
+
+    for i in range(len(data)):
+        sensor_id.append(int(data[i].sensor.split('_')[1]))
+        ts.append(data[i].time)
+        sm.append(data[i].water_SOIL)
+        plot.append(sens_to_field_map[data[i].sensor][1])
+        zone.append(sens_to_field_map[data[i].sensor][0])
+    write_sensor(host=os.getenv("host"), user=os.getenv("user"), password = os.getenv("password"), database = os.getenv("database"), date=ts, plot_id=plot, sensor_zone=zone, water_content=sm)
+    print(f"Received {len(data)} records")
+    return {"status": "ok", "received": len(data)}

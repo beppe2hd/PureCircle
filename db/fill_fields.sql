@@ -1,6 +1,8 @@
 INSERT INTO field (id, crop_type, ir_mode) 
 VALUES
-    (2, 'Titicaca', 'Sensor'),
-    (4, 'ICBA',     'Sensor'),
-    (5, 'Titicaca', 'Farmer'),
-    (6, 'ICBA',     'Farmer');
+    (5, 'ICBA', 'ai-Sensor'),
+    (11, 'Titicaca', 'ai-Sensor'),
+    (30, 'ICBA', 'ai-Sensor'),
+    (32, 'Titicaca','ai-Sensor'),
+    (52, 'Titicaca','ai-Sensor'),
+    (54, 'ICBA', 'ai-Sensor');
