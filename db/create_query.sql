@@ -15,7 +15,7 @@ CREATE TABLE soil_moisture (
     field_id INT NOT NULL,
     CONSTRAINT fk_soil_field FOREIGN KEY (field_id)
         REFERENCES field(id) ON DELETE CASCADE
-    CONSTRAINT uq_soil_measurement UNIQUE (ts, sensor_zone, water_content)
+    CONSTRAINT uq_soil_measurement UNIQUE (ts, sensor_zone, water_content, field_id)
 );
 
 CREATE TABLE irrigation (
