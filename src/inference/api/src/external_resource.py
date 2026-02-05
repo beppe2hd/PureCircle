@@ -152,7 +152,7 @@ def write_irrigation(host, user, password, database, date, water_volume, field_i
     cursor = conn.cursor(dictionary=True)
 
     query = f"""
-    INSERT INTO irrigation (ts, water_volume, field_id)
+    INSERT IGNORE INTO irrigation (ts, water_volume, field_id)
     VALUES (%s, %s, %s);
     """
 
@@ -171,7 +171,7 @@ def write_lai(host, user, password, database, date, lai, field_id):
     cursor = conn.cursor(dictionary=True)
 
     query = f"""
-    INSERT INTO lai (ts, lai, field_id)
+    INSERT IGNORE INTO lai (ts, lai, field_id)
     VALUES (%s, %s, %s);
     """
 
@@ -280,7 +280,7 @@ def write_sensor(host, user, password, database, date, plot_id, sensor_zone, wat
     cursor = conn.cursor()
 
     query = f"""
-    INSERT INTO soil_moisture (ts, sensor_zone, water_content, field_id)
+    INSERT IGNORE INTO soil_moisture (ts, sensor_zone, water_content, field_id)
     VALUES (%s, %s, %s, %s);
     """
 
