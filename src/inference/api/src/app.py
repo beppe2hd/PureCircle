@@ -137,11 +137,11 @@ def forecast(field_id: int):
     y = inference(model, x, x_f, output_scale_index, scaler)
 
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
-    date_index = [d.strftime('%m-%d %H') for d in date_index.to_list()]
+    date_index = [d.strftime('%m-%d %H:00') for d in date_index.to_list()]
     list1 = list(list(zip(*y.tolist()))[0])
     list2 = list(list(zip(*y.tolist()))[1])
 
-    print(list1)
+    print(type(list1))
     print(list2)
 
 
@@ -168,10 +168,11 @@ def forecast(field_id: int):
         suggested_volume = float(suggested_volume)
         suggested_time = float(suggested_time)
         idx = int(idx+1)
+        list1 = list1.tolist()
 
 
     return {
-        "list1": list1.tolist(),
+        "list1": list1,
         "list2": list2,
         "data_index": date_index,
         "irrigation": irrigation,

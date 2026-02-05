@@ -152,7 +152,7 @@ export default function IrrigationDashboard() {
                         <ResponsiveContainer>
                           <LineChart data={forecast}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="hour" angle={-45} />
+                            <XAxis dataKey="hour" angle={-45} tick={{ fontSize: 9 }}/>
                             <YAxis />
                             <Tooltip />
                             <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
