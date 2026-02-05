@@ -12,7 +12,7 @@ def get_config_file(path):
 def get_start_end_date(delta, direction):
     now = datetime.now()
     date_now = pd.to_datetime(now)
-    date_now_round = date_now.round("H")
+    date_now_round = date_now.round("h")
     # print(str(date_now_round))
     if direction == "past":
         end_dt = str(date_now_round)

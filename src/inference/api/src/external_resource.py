@@ -107,6 +107,7 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
         full_index = pd.date_range(start=start_dt, end=end_dt, freq="h")
         df = df.reindex(full_index)
         df = df.interpolate()
+        df.fillna(20.0, inplace=True)
         print(df)
         print('*-*-'*50)
 
@@ -248,7 +249,7 @@ def retriev_last_lai(host, user, password, database):
     SELECT ts, lai, field_id
     FROM (
         SELECT
-            iid,
+            id,
             ts,
             lai,
             field_id,

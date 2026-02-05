@@ -42,5 +42,5 @@ irr_param:
   volume:
     a: -3.16
     b: 87.22
-  threshold: 26.0
+  threshold: 22.0
 

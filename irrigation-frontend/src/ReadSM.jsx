@@ -166,7 +166,7 @@ export default function IrrigationDashboard() {
                     <Col md="4">
                       {irrigation === 1
                         ? <Alert variant="primary">
-                          Irrigate for {irr_dur != null ? irr_dur.toFixed(2) : "-"} minutes befor the next {irr_time != null ? irr_time : "-"} hour/hours
+                          Irrigate for {irr_dur != null ? Math.round(irr_dur) : "-"} minutes befor the next {irr_time != null ? irr_time : "-"} hour/hours
                         </Alert>
                         : irrigation === 0
                           ? <Alert variant="secondary">

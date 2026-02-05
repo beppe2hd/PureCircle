@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from pydantic import BaseModel
 from typing import List
-
+import uvicorn
+import pandas as pd
 
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
@@ -134,16 +135,21 @@ def forecast(field_id: int):
     x = torch.tensor(x)
     x_f = torch.tensor(x_f)
     y = inference(model, x, x_f, output_scale_index, scaler)
-    
+
+    date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
     date_index = [d.strftime('%m-%d %H') for d in date_index.to_list()]
     list1 = list(list(zip(*y.tolist()))[0])
     list2 = list(list(zip(*y.tolist()))[1])
+
+    print(list1)
+    print(list2)
 
 
     irrigation = 0
     idx = 0
     suggested_volume = 0
     suggested_time = 0
+
     dur_a = config["irr_param"]["durartio"]["a"]
     dur_b = config["irr_param"]["durartio"]["b"]
     vol_a = config["irr_param"]["volume"]["a"]
@@ -280,3 +286,13 @@ def receive_bulk_data(data: List[SensorReading]):
     write_sensor(host=os.getenv("host"), user=os.getenv("user"), password = os.getenv("password"), database = os.getenv("database"), date=ts, plot_id=plot, sensor_zone=zone, water_content=sm)
     print(f"Received {len(data)} records")
     return {"status": "ok", "received": len(data)}
+
+# if __name__ == "__main__":
+
+#     uvicorn.run(
+#         "src.inference.api.src.app:app",
+#         host="0.0.0.0",
+#         port=8000,
+#         reload=True,
+#     )
+
