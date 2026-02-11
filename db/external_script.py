@@ -27,7 +27,7 @@ def fetch_last_24h_data():
     SELECT id, time, sensor, water_SOIL
     FROM sensor_data
     WHERE time >= NOW() - INTERVAL 1 HOUR
-      AND sensor IN ("sensor_014", "sensor_015", "sensor_032", "sensor_033", "sensor_089", "sensor_090", "sensor166", "sensor_174","sensor_172", "sensor_156", "sensor_161", "sensor_162")
+      AND sensor IN ("sensor_014", "sensor_015", "sensor_032", "sensor_033", "sensor_089", "sensor_090", "sensor_166", "sensor_174","sensor_172", "sensor_156", "sensor_161", "sensor_162")
     ORDER BY time DESC
     LIMIT 2000;
     """
