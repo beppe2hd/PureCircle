@@ -15,7 +15,7 @@ DB_CONFIG = {
 API_URL = "http://api-purecircle.ngrok.app/sensor-data/"
 
 SENSOR_LIST = ["sensor_014", "sensor_015", "sensor_032", "sensor_033",
-"sensor_089", "sensor_090", "sensor166", "sensor_174",
+"sensor_089", "sensor_090", "sensor_166", "sensor_174",
 "sensor_172", "sensor_156", "sensor_161", "sensor_162"]
 
 #--- FETCH DATA FROM DB ---
