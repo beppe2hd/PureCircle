@@ -8,7 +8,7 @@ sys.path.append(os.getenv("PYTHONPATH"))
 
 from src.commons.data import inverse_scale_data
 
-available_models = ["RNN", "LSTM"]
+available_models = ["RNN", "LSTM", "LSTM_SMW"]
 
 
 def create_model(config):
@@ -40,6 +40,26 @@ def create_model(config):
         if model_type == "LSTM":
 
             from src.commons.architectures.lstm_encoder_decoder import Seq2Seq
+
+            input_size = len(
+                config["features"]["input"]["fiedls"]
+                + config["features"]["input"]["meteo_historical"]
+            )
+            output_size = len(config["features"]["output"])
+            hidden_size = config["architecture"]["hidden"]
+            forecast_size = len(config["features"]["input"]["meteo_forecast"])
+
+            output_seq_len = config["features"]["output_seq_len"]
+
+            model = Seq2Seq(
+                input_size, output_size, hidden_size, forecast_size, output_seq_len
+            )
+
+            return model
+        
+        if model_type == "LSTM_SMW":
+
+            from src.commons.architectures.lstm_encoder_decoder_sm_weighted import Seq2Seq
 
             input_size = len(
                 config["features"]["input"]["fiedls"]
