@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
     app.state.x_scale_index = x_scale_index
     app.state.x_f_scale_index = x_f_scale_index
 
-    print(f"App running with {config["name"]}")
+    print(f"App running with {config['name']}")
 
 
     yield

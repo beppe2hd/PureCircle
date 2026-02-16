@@ -85,8 +85,20 @@ def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index,
         #x_scale_index = []
         #x_f_scale_index = []
 
+        print(x.shape)
+        print(x_f.shape)
+
         x = specific_scale_data(x, x_scale_index, scaler)
         x_f = specific_scale_data(x_f, x_f_scale_index, scaler)
+
+        x = x.squeeze(0)
+        x_f = x_f.squeeze(0)
+        print("-"*50)
+        print(x.shape)
+        print(x_f.shape)
+
+        x = x.to(torch.float32)
+        x_f = x_f.to(torch.float32)
 
         y = model(x.unsqueeze(0), x_f.unsqueeze(0))
         y = inverse_scale_data(y, output_scale_index, scaler)
