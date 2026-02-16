@@ -280,7 +280,7 @@ def parse_args():
 if __name__ == "__main__":
     set_randomness()
     
-    config_path = "./src/configurations/config_season2_w_adam_copy_2.yaml"
+    config_path = "./src/configurations/config_season2_official.yaml"
     print(f"running with configuration file: {config_path}")
     config = get_config_file(config_path)
     print(config)
