@@ -6,7 +6,7 @@ import joblib
 load_dotenv()
 sys.path.append(os.getenv("PYTHONPATH"))
 
-from src.commons.data import inverse_scale_data
+from src.commons.data import inverse_scale_data, specific_scale_data
 
 available_models = ["RNN", "LSTM", "LSTM_SMW"]
 
@@ -79,8 +79,15 @@ def create_model(config):
             
 
 
-def inference(model, x, x_f, output_scale_index, scaler):
+def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler):
     with torch.inference_mode():
+
+        #x_scale_index = []
+        #x_f_scale_index = []
+
+        x = specific_scale_data(x, x_scale_index, scaler)
+        x_f = specific_scale_data(x_f, x_f_scale_index, scaler)
+
         y = model(x.unsqueeze(0), x_f.unsqueeze(0))
         y = inverse_scale_data(y, output_scale_index, scaler)
         return y.squeeze().detach().numpy()
@@ -91,12 +98,16 @@ def load_weights_and_scale(model, config):
 
     path_model = folder_path + "/weights.pth"
     path_scaler = folder_path + "/scaler.pkl"
-    path_scaler_indexs = folder_path + "/scaler_indexs.pkl"
+    path_scaler_out_indexs = folder_path + "/scaler_out_indexs.pkl"
+    path_scaler_x_indexs = folder_path + "/scaler_x_indexs.pkl"
+    path_scaler_x_f_indexs = folder_path + "/scaler_x_f_indexs.pkl"
 
     state_dict = torch.load(path_model, map_location="cpu")
     model.load_state_dict(state_dict)
 
     scaler = joblib.load(path_scaler)
-    output_scale_index = joblib.load(path_scaler_indexs)
+    output_scale_index = joblib.load(path_scaler_out_indexs)
+    x_scale_index = joblib.load(path_scaler_x_indexs)
+    x_f_scale_index = joblib.load(path_scaler_x_f_indexs)
 
-    return model, scaler, output_scale_index
+    return model, scaler, output_scale_index, x_scale_index, x_f_scale_index

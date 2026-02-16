@@ -168,6 +168,10 @@ def data_preparation(config):
 
     targets = config["features"]["output"]
     output_scale_index = [selected_columns.index(t) for t in targets]
+    targets = config["features"]["input"]["fiedls"].extend(config["features"]["input"]["meteo_historical"])
+    x_scale_index = [selected_columns.index(t) for t in targets]
+    targets = config["features"]["input"]["meteo_forecast"]
+    x_f_scale_index = [selected_columns.index(t) for t in targets]
 
     df_train = create_sub_df(df_train, selected_columns)
     df_test = create_sub_df(df_test, selected_columns)
@@ -175,7 +179,7 @@ def data_preparation(config):
     df_train, df_test, scaler = scale_data(df_train, df_test)
     dataloader_train, dataloader_test = set_data_loaders(config, df_train, df_test)
 
-    return dataloader_train, dataloader_test, scaler, output_scale_index
+    return dataloader_train, dataloader_test, scaler, output_scale_index, x_scale_index, x_f_scale_index
 
 
 def train(config, dataloader_train, dataloader_test, output_scale_index, scaler):
@@ -241,7 +245,7 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
     return model, test_losses, mse_overEpoches
 
 
-def save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches, ):
+def save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches, ):
 
     print(loss_mse)
     print(mse_overEpoches)
@@ -253,11 +257,16 @@ def save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches, )
 
     path_model = folder_path + "/weights.pth"
     path_scaler = folder_path + "/scaler.pkl"
-    path_scaler_indexs = folder_path + "/scaler_indexs.pkl"
+    path_out_scaler_indexs = folder_path + "/scaler_out_indexs.pkl"
+    path_x_scaler_indexs = folder_path + "/scaler_x_indexs.pkl"
+    path_x_f_scaler_indexs = folder_path + "/scaler_x_f_indexs.pkl"
+
     path_mse = folder_path + "/mse.json"
     torch.save(model.state_dict(), path_model)
     joblib.dump(scaler, path_scaler)
-    joblib.dump(output_scale_index, path_scaler_indexs)
+    joblib.dump(output_scale_index, path_out_scaler_indexs)
+    joblib.dump(x_scale_index, path_x_scaler_indexs)
+    joblib.dump(x_f_scale_index, path_x_f_scaler_indexs)
     with open(path_mse, "w") as f:
         json.dump(mse_overEpoches.tolist(), f)
     ## complete with a text file reporting information on loss
@@ -286,11 +295,11 @@ if __name__ == "__main__":
     print(config)
 
     
-    dataloader_train, dataloader_test, scaler, output_scale_index = data_preparation(
+    dataloader_train, dataloader_test, scaler, output_scale_index, x_scale_index, x_f_scale_index = data_preparation(
         config
     )
     model, loss_mse, mse_overEpoches = train(
         config, dataloader_train, dataloader_test, output_scale_index, scaler
     )
-    save(config, model, scaler, output_scale_index, loss_mse, mse_overEpoches)
+    save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches)
 

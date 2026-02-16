@@ -41,19 +41,21 @@ class SensorReading(BaseModel):
 async def lifespan(app: FastAPI):
     config = get_config_file(os.getenv("configFile"))
     model = create_model(config)
-    model, scaler, output_scale_index = load_weights_and_scale(model, config)
+    model, scaler, output_scale_index, x_scale_index, x_f_scale_index = load_weights_and_scale(model, config)
     model.eval()
 
     app.state.model = model
     app.state.config = config
     app.state.scaler = scaler
     app.state.output_scale_index = output_scale_index
+    app.state.x_scale_index = x_scale_index
+    app.state.x_f_scale_index = x_f_scale_index
 
     print(f"App running with {config["name"]}")
 
 
     yield
-    del model, scaler, output_scale_index
+    del model, scaler, output_scale_index, x_scale_index, x_f_scale_index
 
 
 app = FastAPI(lifespan=lifespan)
@@ -73,6 +75,8 @@ def forecast(field_id: int):
     config = app.state.config
     scaler = app.state.scaler
     output_scale_index = app.state.output_scale_index
+    x_scale_index = app.state.x_scale_index
+    x_f_scale_index = app.state.x_f_scale_index
 
     start_dt_historical, end_dt_historical = get_start_end_date(
         config["features"]["input_seq_len"], "past"
@@ -136,7 +140,7 @@ def forecast(field_id: int):
     # Convert to NumPy array for convenience
     x = torch.tensor(x)
     x_f = torch.tensor(x_f)
-    y = inference(model, x, x_f, output_scale_index, scaler)
+    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler)
 
     print(fields_feaures)
     print(historical_sensor_data)

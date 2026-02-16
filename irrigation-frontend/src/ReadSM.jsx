@@ -137,7 +137,7 @@ export default function IrrigationDashboard() {
                       >
                         {fields.map((f) => (
                           <option key={f} value={f}>
-                            Field {f}
+                            Plot {f}
                           </option>
                         ))}
                       </Form.Select>
