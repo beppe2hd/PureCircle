@@ -52,8 +52,8 @@ class Seq2Seq(nn.Module):
         batch_size = x.size(0)
         output_size = self.decoder.fc.out_features
 
-        x[:, :, 0] *= 2.0
-        x[:, :, 1] *= 2.0
+        x[:, :, 0] *= 5.0
+        x[:, :, 1] *= 5.0
 
         hidden = self.encoder(x)
 

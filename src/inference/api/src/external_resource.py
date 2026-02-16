@@ -96,6 +96,7 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
 
         cursor.execute(query, (start_dt, end_dt))
         rows = cursor.fetchall()
+        print(rows)
 
         if len(rows)==0:
             return [], []
@@ -108,8 +109,6 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
         df = df.reindex(full_index)
         df = df.interpolate()
         df.fillna(20.0, inplace=True)
-        print(df)
-        print('*-*-'*50)
 
         # df = pd.DataFrame(rows, columns=['ts','water_content'])
         # df["ts"] = pd.to_datetime(df["ts"])
@@ -117,6 +116,7 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
         # df = df.groupby('ts').mean()
      
         outSensor[zone] = df['water_content']
+    
 
     query = f"""
     SELECT ts, water_volume
@@ -140,7 +140,7 @@ def retrive_sensor_data(host, user, password, database, start_dt, end_dt, field_
 
     elements = []
     for i in range(len(irr)):
-        elements.append({'s_b': np.float32(outSensor['s_b'].iloc[i]), 's_w': np.float32(outSensor['s_b'].iloc[i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
+        elements.append({'s_b': np.float32(outSensor['s_b'].iloc[i]), 's_w': np.float32(outSensor['s_w'].iloc[i]), 'irr': irr[i], 'datetime': str(full_index.to_list()[i]), 'LAI': lai[i]})
 
     return elements, full_index
 

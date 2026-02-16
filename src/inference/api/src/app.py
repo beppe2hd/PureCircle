@@ -49,6 +49,8 @@ async def lifespan(app: FastAPI):
     app.state.scaler = scaler
     app.state.output_scale_index = output_scale_index
 
+    print(f"App running with {config["name"]}")
+
 
     yield
     del model, scaler, output_scale_index
@@ -136,13 +138,14 @@ def forecast(field_id: int):
     x_f = torch.tensor(x_f)
     y = inference(model, x, x_f, output_scale_index, scaler)
 
+    print(fields_feaures)
+    print(historical_sensor_data)
+    print(x)
+
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
     date_index = [d.strftime('%m-%d %H:00') for d in date_index.to_list()]
     list1 = list(list(zip(*y.tolist()))[0])
     list2 = list(list(zip(*y.tolist()))[1])
-
-    print(type(list1))
-    print(list2)
 
 
     irrigation = 0

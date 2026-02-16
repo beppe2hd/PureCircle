@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-available_optimizers = ["SGD"]
+available_optimizers = ["SGD", "Adam"]
 available_losses = ["MSELoss"]
 
 
@@ -18,6 +18,12 @@ def load_Optimizer(model, config):
 
             optimizer = torch.optim.SGD(
                 model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay
+            )
+    
+        if oprimizer_type == "Adam":
+
+            optimizer = torch.optim.Adam(
+                model.parameters(), lr=lr, weight_decay=weight_decay
             )
 
         return optimizer
