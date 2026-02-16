@@ -166,9 +166,14 @@ def data_preparation(config):
     )
     selected_columns = list(dict.fromkeys(selected_columns))
 
+    print("------------")
     targets = config["features"]["output"]
     output_scale_index = [selected_columns.index(t) for t in targets]
-    targets = config["features"]["input"]["fiedls"].extend(config["features"]["input"]["meteo_historical"])
+    targets_fields = config["features"]["input"]["fiedls"]
+    target_mh = config["features"]["input"]["meteo_historical"]
+    targets = []
+    targets.extend(targets_fields)
+    targets.extend(target_mh)
     x_scale_index = [selected_columns.index(t) for t in targets]
     targets = config["features"]["input"]["meteo_forecast"]
     x_f_scale_index = [selected_columns.index(t) for t in targets]
