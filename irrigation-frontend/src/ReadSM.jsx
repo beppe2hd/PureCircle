@@ -148,12 +148,12 @@ export default function IrrigationDashboard() {
                   {/* -------- FORECAST CHART -------- */}
                   <Row>
                     <Col>
-                      <div style={{ width: "100%", height: 300, border: "1px solid #ccc" }}>
+                      <div style={{ width: "100%", height: 400, border: "1px solid #ccc" }}>
                         <ResponsiveContainer>
                           <LineChart data={forecast}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="hour" angle={-45} tick={{ fontSize: 9 }}/>
-                            <YAxis />
+                            <YAxis domain={[15, 35]} tickCount={15} />
                             <Tooltip />
                             <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
                             <Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />
