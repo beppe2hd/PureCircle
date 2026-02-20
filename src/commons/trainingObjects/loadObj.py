@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 available_optimizers = ["SGD", "Adam"]
-available_losses = ["MSELoss"]
+available_losses = ["MSELoss", "Huber"]
 
 
 def load_Optimizer(model, config):
@@ -42,5 +42,13 @@ def load_Loss(config):
 
         if loss_type == "MSELoss":
             criterion = nn.MSELoss()
+
+        if loss_type == "MAPE":
+            def mape(y_pred, y_true, epsilon=1e-8):
+                return torch.mean(torch.abs((y_true - y_pred) / (y_true + epsilon))) * 100
+            criterion = mape
+
+        if loss_type == "Huber":
+            criterion = nn.HuberLoss(delta=1.0)
 
     return criterion
