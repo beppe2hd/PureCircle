@@ -79,27 +79,37 @@ def create_model(config):
             
 
 
-def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler):
+def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, delta_mode):
     with torch.inference_mode():
 
-        #x_scale_index = []
-        #x_f_scale_index = []
-
+        print("------")
+        print(f"x shape: {x.shape}")
+        print(f"x [-1,0:2]: {x[-1,0:2]}")
+        x_delta = x[-1,0:2]
 
         x = specific_scale_data(x, x_scale_index, scaler)
         x_f = specific_scale_data(x_f, x_f_scale_index, scaler)
+        print("------")
+        print(f"x shape: {x.shape}")
+        print(f"x [0,-1,0:2]: {x[0,-1,0:2]}")
+
+        print("*******")
 
         x = x.squeeze(0)
         x_f = x_f.squeeze(0)
-
         x = x.to(torch.float32)
         x_f = x_f.to(torch.float32)
 
-        print(x.shape)
-        print(x_f.shape)
+        print(f"x shape before inference {x.shape}")
 
         y = model(x.unsqueeze(0), x_f.unsqueeze(0))
+        print(f'y shape out {y.shape}')
+        #if delta_mode ==1:
+        #            y=y+x[-1,0:2]
         y = inverse_scale_data(y, output_scale_index, scaler)
+        #if delta_mode ==1:
+        #    y=y+x_delta.unsqueeze(0)
+        print("*-------*")
         return y.squeeze().detach().numpy()
     
 def load_weights_and_scale(model, config):

@@ -140,7 +140,7 @@ def forecast(field_id: int):
     # Convert to NumPy array for convenience
     x = torch.tensor(x)
     x_f = torch.tensor(x_f)
-    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler)
+    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
 
     print(fields_feaures)
     print(historical_sensor_data)

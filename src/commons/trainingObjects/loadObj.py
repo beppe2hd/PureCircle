@@ -2,7 +2,33 @@ import torch
 from torch import nn
 
 available_optimizers = ["SGD", "Adam"]
-available_losses = ["MSELoss", "Huber"]
+available_losses = ["MSELoss", "Huber", "MSE_W"]
+
+import torch
+import torch.nn as nn
+
+class ExpWeightedMSELoss(nn.Module):
+    def __init__(self, horizon=48, decay=0.1):
+        super().__init__()
+        t = torch.arange(horizon).float()
+        weights = torch.exp(-decay * t)
+
+        # Normalizzazione opzionale (mantiene scala simile alla MSE)
+        weights = weights / weights.sum() * horizon
+
+        self.register_buffer("weights", weights)  # non è un parametro allenabile
+
+    def forward(self, pred, target):
+        # pred, target: (B, 48, 2)
+
+        loss = (pred - target) ** 2   # (B, 48, 2)
+
+        # reshape pesi per broadcast su feature
+        w = self.weights.view(1, -1, 1)  # (1, 48, 1)
+
+        weighted_loss = loss * w
+
+        return weighted_loss.mean()
 
 
 def load_Optimizer(model, config):
@@ -47,6 +73,9 @@ def load_Loss(config):
             def mape(y_pred, y_true, epsilon=1e-8):
                 return torch.mean(torch.abs((y_true - y_pred) / (y_true + epsilon))) * 100
             criterion = mape
+
+        if loss_type == "MSE_W":
+            criterion = ExpWeightedMSELoss(decay=config["hyperparameters"]["loss_MSE_W_decay"])
 
         if loss_type == "Huber":
             criterion = nn.HuberLoss(delta=1.0)

@@ -112,6 +112,67 @@ class TimeSeriesDataset(Dataset):
         ]
 
         return x, x_f, y
+    
+class TimeSeriesDataset_Delta(Dataset):
+    def __init__(self, config, data):
+        """
+        Args:
+            data (pandas.Dataframe)
+        """
+        # if isinstance(data, np.ndarray):
+        #    data = torch.tensor(data, dtype=torch.float32)
+
+        self.data = data
+        self.input_seq_len = config["features"]["input_seq_len"]
+        self.output_seq_len = config["features"]["output_seq_len"]
+        self.input_features_list = (
+            config["features"]["input"]["fiedls"]
+            + config["features"]["input"]["meteo_historical"]
+        )
+        self.input_forecast_features_list = config["features"]["input"][
+            "meteo_forecast"
+        ]
+        self.out_features_list = config["features"]["output"]
+        self.shift = config["features"]["shift"]
+        self.length = (
+            len(self.data) - self.input_seq_len - self.output_seq_len + 1 - self.shift
+        )
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        x = self.data[self.input_features_list]
+        x = torch.tensor(x.values, dtype=torch.float32)
+        x = x[idx : idx + self.input_seq_len, :]
+
+        x_f = self.data[self.input_forecast_features_list]
+        x_f = torch.tensor(x_f.values, dtype=torch.float32)
+        x_f = x_f[
+            idx
+            + self.input_seq_len
+            + self.shift : idx
+            + self.input_seq_len
+            + self.output_seq_len
+            + self.shift,
+            :,
+        ]
+
+        y = self.data[self.out_features_list]
+        y = torch.tensor(y.values, dtype=torch.float32)
+        y = y[
+            idx
+            + self.input_seq_len
+            + self.shift : idx
+            + self.input_seq_len
+            + self.output_seq_len
+            + self.shift,
+            :,
+        ]
+
+        y=y-x[-1,0:1]
+
+        return x, x_f, y
 
 
 
@@ -131,10 +192,16 @@ def scale_data(df_train, df_test):
 
 def set_data_loaders(config, df_train, df_test):
 
-    dataset_train = TimeSeriesDataset(config, df_train)
+    if config['delta_mode']==0:
+        dataset_train = TimeSeriesDataset(config, df_train)
+    if config['delta_mode']==1:
+        dataset_train = TimeSeriesDataset_Delta(config, df_train)
     dataloader_train = DataLoader(dataset_train, batch_size=32, shuffle=True)
 
-    dataset_test = TimeSeriesDataset(config, df_test)
+    if config['delta_mode']==0:
+        dataset_test = TimeSeriesDataset(config, df_test)
+    if config['delta_mode']==1:
+        dataset_test = TimeSeriesDataset_Delta(config, df_test)
     dataloader_test = DataLoader(dataset_test, batch_size=32, shuffle=True)
 
     return dataloader_train, dataloader_test
@@ -293,10 +360,11 @@ def parse_args():
 
 if __name__ == "__main__":
     set_randomness()
-    args = parse_args()
-    config_path = args.config
-    print(f"running with configuration file: {config_path}")
-    config = get_config_file(config_path)
+    #args = parse_args()
+    #config_path = args.config
+    #print(f"running with configuration file: {config_path}")
+    #config = get_config_file(config_path)
+    config = get_config_file('src/configurations/config_season2_MSE_W_newfieldsV3.yaml')
     print(config)
 
     
