@@ -220,8 +220,12 @@ def create_sub_df(df, selected_columns):
 
 def data_preparation(config):
 
-    path_train = config["files"]["training"]
+    paths_train = config["files"]["training"]
     path_test = config["files"]["test"]
+
+    for i in paths_train:
+
+    df = pd.concat([pd.read_csv(file) for file in files], ignore_index=True)
 
     df_train, df_test = load_train_test(path_train, path_test)
 
