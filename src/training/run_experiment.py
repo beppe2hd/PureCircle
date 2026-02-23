@@ -360,11 +360,11 @@ def parse_args():
 
 if __name__ == "__main__":
     set_randomness()
-    #args = parse_args()
-    #config_path = args.config
-    #print(f"running with configuration file: {config_path}")
-    #config = get_config_file(config_path)
-    config = get_config_file('src/configurations/config_season2_MSE_W_newfieldsV3.yaml')
+    args = parse_args()
+    config_path = args.config
+    print(f"running with configuration file: {config_path}")
+    config = get_config_file(config_path)
+    #config = get_config_file('src/configurations/config_season2_MSE_W_newfieldsV3.yaml')
     print(config)
 
     

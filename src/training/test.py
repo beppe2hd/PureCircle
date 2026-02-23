@@ -29,7 +29,8 @@ from src.commons.utils import (
 os.chdir('../../')
 print(os.getcwd())
 
-config_path = "src/configurations/config_season2_MSE_W_newfieldsV3.yaml"
+#config_path = "src/configurations/config_season2_MSE_W_newfieldsV3.yaml"
+config_path = "src/configurations/config_season2_MSE_W_newfield_singleOut.yaml"
 print(f"running with configuration file: {config_path}")
 config = get_config_file(config_path)
 print(config)
@@ -1212,6 +1213,15 @@ xf54 = torch.tensor([[  9.7955,  65.0000,  98.0000,  17.3735,   0.6000],
         [ 12.8390,  67.0000,  41.0000,   6.1306,   0.0000]])
 
 
+#%%
+#use if only one input 
+col_to_remove = 0
+x5 = torch.cat((x5[:, :col_to_remove], x5[:, col_to_remove+1:]), dim=1)
+x11 = torch.cat((x11[:, :col_to_remove], x11[:, col_to_remove+1:]), dim=1)
+x30 = torch.cat((x30[:, :col_to_remove], x30[:, col_to_remove+1:]), dim=1)
+x32 = torch.cat((x32[:, :col_to_remove], x32[:, col_to_remove+1:]), dim=1)
+x52 = torch.cat((x52[:, :col_to_remove], x52[:, col_to_remove+1:]), dim=1)
+x54 = torch.cat((x54[:, :col_to_remove], x54[:, col_to_remove+1:]), dim=1)
 
 #%%
 
@@ -1228,35 +1238,32 @@ y54 = inference(model, x54, xf54, output_scale_index, x_scale_index, x_f_scale_i
 # %%
 print(f"Plot5")
 print(f"x5 = {x5[65:-1,0:2]}")
-print(f"y5 = {y5[1:6,0:2]}")
+print(f"y5 = {y5[1:6]}")
 
 print(f"Plot11")
 print(f"x11 = {x11[65:-1,0:2]}")
-print(f"y11 = {y11[1:6,0:2]}")
+print(f"y11 = {y11[1:6]}")
 
 print(f"Plot30")
 print(f"x30 = {x30[65:-1,0:2]}")
-print(f"y30 = {y30[1:6,0:2]}")
+print(f"y30 = {y30[1:6]}")
 
 print(f"Plot32")
 print(f"x32 = {x32[65:-1,0:2]}")
-print(f"y32 = {y32[1:6,0:2]}")
+print(f"y32 = {y32[1:6]}")
 
 print(f"Plot52")
 print(f"x52 = {x52[65:-1,0:2]}")
-print(f"y52 = {y52[1:6,0:2]}")
+print(f"y52 = {y52[1:6]}")
 
 print(f"Plot52")
 print(f"x52 = {x52[65:-1,0:2]}")
-print(f"y52 = {y52[1:6,0:2]}")
+print(f"y52 = {y52[1:6]}")
 
 print(f"Plot54")
 print(f"x54 = {x54[65:-1,0:2]}")
-print(f"y54 = {y54[1:6:,0:2]}")
+print(f"y54 = {y54[1:6]}")
 
 
 
 # %%
-print(f"x1 = {x1[65:-1,0:2]}")
-# %%
-x1
