@@ -142,8 +142,6 @@ def forecast(field_id: int):
     x_f = torch.tensor(x_f)
     y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
 
-    print(fields_feaures)
-    print(historical_sensor_data)
     print(x)
 
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
@@ -176,6 +174,11 @@ def forecast(field_id: int):
         suggested_time = float(suggested_time)
         idx = int(idx+1)
         list1 = list1.tolist()
+
+    print("[list1- values]", list1)
+    print("[list2- values]", list2)
+    print("[list1- max]", max(list1))
+    print("[list2- max]", max(list2))
 
 
     return {
