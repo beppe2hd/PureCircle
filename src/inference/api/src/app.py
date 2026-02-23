@@ -129,20 +129,29 @@ def forecast(field_id: int):
     x = []
     x_f = []
 
-    for i in range(0, config["features"]["output_seq_len"]):
+    for i in range(0, config["features"]["input_seq_len"]):
         r = historical_sensor_data[i]
         a = [r[item] for item in fields_feaures]
         hmd = meteo_data_historical.iloc[i][meteo_features_historical].to_list()
-        fmd = meteo_data_forecast.iloc[i][meteo_features_forecast].to_list()
         a.extend(hmd)
         x.append(a)
+
+    for i in range(0, config["features"]["output_seq_len"]):
+        fmd = meteo_data_forecast.iloc[i][meteo_features_forecast].to_list()
         x_f.append(fmd)
     # Convert to NumPy array for convenience
     x = torch.tensor(x)
     x_f = torch.tensor(x_f)
-    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
 
+    print("-"*50)
+    print("-"*50)
+    print(f"Field id = {field_id}")
     print(x)
+    print(x_f)
+    print("-"*50)
+    print("-"*50)
+    
+    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
 
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
     date_index = [d.strftime('%m-%d %H:00') for d in date_index.to_list()]
