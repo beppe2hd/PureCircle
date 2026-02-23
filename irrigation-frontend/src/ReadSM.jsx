@@ -175,8 +175,8 @@ export default function IrrigationDashboard() {
                               />
                             </YAxis> 
                             <Tooltip />
-                            <Line dataKey="value1" stroke="#1f77b4" strokeWidth={2} />
-                            <Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />
+                            <Line dataKey="value1" name="Within Line" stroke="#1f77b4" strokeWidth={2} />
+                            {/*<Line dataKey="value2" stroke="#ff7f0e" strokeWidth={2} />*/}
                           </LineChart>
                         </ResponsiveContainer>
                       </div>

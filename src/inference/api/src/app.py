@@ -155,9 +155,16 @@ def forecast(field_id: int):
 
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
     date_index = [d.strftime('%m-%d %H:00') for d in date_index.to_list()]
-    list1 = list(list(zip(*y.tolist()))[0])
-    list2 = list(list(zip(*y.tolist()))[1])
-
+    
+    if len(y.shape)>1:
+        print(f"{type(y)}, {y.shape})--------*****7&&&&&&&")
+        list1 = list(list(zip(*y.tolist()))[0])
+        list2 = list(list(zip(*y.tolist()))[0])
+    else:
+        #y = np.expand_dims(y, axis=1)
+        print(f"{type(y)}, {y.shape})--------*****7&&&&&&&")
+        list1 = y.tolist()
+        list2 = list1
 
     irrigation = 0
     idx = 0
