@@ -380,7 +380,7 @@ if __name__ == "__main__":
     config_path = args.config
     print(f"running with configuration file: {config_path}")
     config = get_config_file(config_path)
-    config = get_config_file('src/configurations/config_season2_MSE_W_allFIleds0.yaml')
+    #config = get_config_file('src/configurations/config_season2_MSE_W_allFIleds0.yaml')
     print(config)
 
     
