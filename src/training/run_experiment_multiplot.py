@@ -175,36 +175,24 @@ class TimeSeriesDataset_Delta(Dataset):
         return x, x_f, y
 
 
+def scale_data(df):
 
-def scale_data(df_train, df_test):
+    df_np = scaler.transform(df)
 
-    scaler = StandardScaler()
-    scaler.fit(df_train)
+    df = pd.DataFrame(df_np, columns=df.columns, index=df.index)
 
-    df_train_np = scaler.transform(df_train)
-    df_test_np = scaler.transform(df_test)
-
-    df_train = pd.DataFrame(df_train_np, columns=df_train.columns, index=df_train.index)
-    df_test = pd.DataFrame(df_test_np, columns=df_test.columns, index=df_test.index)
-
-    return df_train, df_test, scaler
+    return df
 
 
-def set_data_loaders(config, df_train, df_test):
+def set_data_loaders(config, df):
 
     if config['delta_mode']==0:
-        dataset_train = TimeSeriesDataset(config, df_train)
+        dataset = TimeSeriesDataset(config, df)
     if config['delta_mode']==1:
-        dataset_train = TimeSeriesDataset_Delta(config, df_train)
-    dataloader_train = DataLoader(dataset_train, batch_size=32, shuffle=True)
+        dataset = TimeSeriesDataset_Delta(config, df)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-    if config['delta_mode']==0:
-        dataset_test = TimeSeriesDataset(config, df_test)
-    if config['delta_mode']==1:
-        dataset_test = TimeSeriesDataset_Delta(config, df_test)
-    dataloader_test = DataLoader(dataset_test, batch_size=32, shuffle=True)
-
-    return dataloader_train, dataloader_test
+    return dataloader
 
 
 def create_sub_df(df, selected_columns):
@@ -221,13 +209,9 @@ def create_sub_df(df, selected_columns):
 def data_preparation(config):
 
     paths_train = config["files"]["training"]
-    path_test = config["files"]["test"]
+    print(paths_train)
 
-    for i in paths_train:
-
-    df = pd.concat([pd.read_csv(file) for file in files], ignore_index=True)
-
-    df_train, df_test = load_train_test(path_train, path_test)
+    merged_df = pd.concat([pd.read_csv(file) for file in paths_train], ignore_index=True)
 
     selected_columns = (
         config["features"]["input"]["fiedls"]
@@ -237,7 +221,6 @@ def data_preparation(config):
     )
     selected_columns = list(dict.fromkeys(selected_columns))
 
-    print("------------")
     targets = config["features"]["output"]
     output_scale_index = [selected_columns.index(t) for t in targets]
     targets_fields = config["features"]["input"]["fiedls"]
@@ -249,16 +232,14 @@ def data_preparation(config):
     targets = config["features"]["input"]["meteo_forecast"]
     x_f_scale_index = [selected_columns.index(t) for t in targets]
 
-    df_train = create_sub_df(df_train, selected_columns)
-    df_test = create_sub_df(df_test, selected_columns)
+    merged_df = create_sub_df(merged_df, selected_columns)
+    scaler = StandardScaler()
+    scaler.fit(merged_df)
 
-    df_train, df_test, scaler = scale_data(df_train, df_test)
-    dataloader_train, dataloader_test = set_data_loaders(config, df_train, df_test)
-
-    return dataloader_train, dataloader_test, scaler, output_scale_index, x_scale_index, x_f_scale_index
+    return scaler, output_scale_index, x_scale_index, x_f_scale_index, selected_columns
 
 
-def train(config, dataloader_train, dataloader_test, output_scale_index, scaler):
+def train(config,output_scale_index, scaler, selected_columns):
 
     model = create_model(config)
 
@@ -266,29 +247,50 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
     criterion = load_Loss(config)
     epochs = config["hyperparameters"]["epoches"]
 
+    sectors = [0,6,12,24,48]
     train_losses = np.zeros(epochs)
     test_losses = np.zeros(epochs)
-    mse_overEpoches = np.zeros(epochs)
+    mse_overEpoches = np.zeros([epochs,len(sectors)-1])
+    tensor_list_y = []
+    tensor_list_output = []
+
+
+    df_test = pd.read_csv(config["files"]["test"])
+    df_test = create_sub_df(df_test, selected_columns)
+    df_test = scale_data(df_test)
+    dataloader_test = set_data_loaders(config, df_test)
 
     for epoch in tqdm(range(epochs)):
         model.train()
         train_loss = 0.0
         count = 0
-        for x_batch, x_f_batch, y_batch in dataloader_train:
-            count += 1
-            x_batch = x_batch.type(torch.float32)
-            x_f_batch = x_f_batch.type(torch.float32)
-            y_batch = y_batch.type(torch.float32)
-            # Forward pass
-            outputs = model(x_batch, x_f_batch)
+        used_plots = 0
+        
+        for plot_file_path in config["files"]["training"]:
 
-            loss = criterion(outputs, y_batch)
-            train_loss += loss.item()
+            used_plots+=1
+            print(f"Currently working on plot {plot_file_path.split('/')[-1]} - plot {used_plots} of {len(config["files"]["training"])}")
 
-            # Backpropagation
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            df_train = pd.read_csv(plot_file_path)
+            df_train = create_sub_df(df_train, selected_columns)
+            df_train = scale_data(df_train)
+            dataloader_train = set_data_loaders(config, df_train)
+
+            for x_batch, x_f_batch, y_batch in dataloader_train:
+                count += 1
+                x_batch = x_batch.type(torch.float32)
+                x_f_batch = x_f_batch.type(torch.float32)
+                y_batch = y_batch.type(torch.float32)
+                # Forward pass
+                outputs = model(x_batch, x_f_batch)
+
+                loss = criterion(outputs, y_batch)
+                train_loss += loss.item()
+
+                # Backpropagation
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
         train_losses[epoch] = train_loss / count
 
@@ -296,7 +298,7 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
         with torch.inference_mode():
             # 1. Forward pass
             test_loss = 0.0
-            mse_s = 0.0
+            mse_s = np.zeros(len(sectors)-1)
             count = 0
             for x_batch, x_f_batch, y_batch in dataloader_test:
                 count += 1
@@ -309,19 +311,24 @@ def train(config, dataloader_train, dataloader_test, output_scale_index, scaler)
                 ## apply inverse_scale_data(output, col)
                 outputs = inverse_scale_data(outputs, output_scale_index, scaler)
                 y_batch = inverse_scale_data(y_batch, output_scale_index, scaler)
+                if epoch == epochs-1:
+                    tensor_list_y.append(y_batch)
+                    tensor_list_output.append(outputs)
 
                 loss = criterion(outputs, y_batch)
                 test_loss += loss.item()
-                mse = torch.mean((y_batch - outputs) ** 2)
-                mse_s += mse
+                for i in range(len(sectors)-1):
+                    mse_s[i] += torch.mean((y_batch[:,sectors[i]:sectors[i+1],:] - outputs[:,sectors[i]:sectors[i+1],:]) ** 2)
+            if epoch == epochs-1:
+                test_y = torch.cat(tensor_list_y, dim=0)
+                test_output = torch.cat(tensor_list_output, dim=0)
+        mse_overEpoches[epoch,:] = mse_s / count
+        test_losses[epoch] = test_loss / count
 
-            mse_overEpoches[epoch] = mse_s / count
-            test_losses[epoch] = test_loss / count
-
-    return model, test_losses, mse_overEpoches
+    return model, test_losses, mse_overEpoches, test_y, test_output
 
 
-def save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches, ):
+def save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches, test_y, test_output):
 
     print(loss_mse)
     print(mse_overEpoches)
@@ -336,6 +343,8 @@ def save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_ind
     path_out_scaler_indexs = folder_path + "/scaler_out_indexs.pkl"
     path_x_scaler_indexs = folder_path + "/scaler_x_indexs.pkl"
     path_x_f_scaler_indexs = folder_path + "/scaler_x_f_indexs.pkl"
+    path_test_y = folder_path + "/test_y.pkl"
+    path_test_output = folder_path + "/test_output.pkl"
 
     path_mse = folder_path + "/mse.json"
     torch.save(model.state_dict(), path_model)
@@ -343,6 +352,9 @@ def save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_ind
     joblib.dump(output_scale_index, path_out_scaler_indexs)
     joblib.dump(x_scale_index, path_x_scaler_indexs)
     joblib.dump(x_f_scale_index, path_x_f_scaler_indexs)
+    joblib.dump(test_y, path_test_y)
+    joblib.dump(test_output, path_test_output)
+
     with open(path_mse, "w") as f:
         json.dump(mse_overEpoches.tolist(), f)
     ## complete with a text file reporting information on loss
@@ -364,19 +376,19 @@ def parse_args():
 
 if __name__ == "__main__":
     set_randomness()
-    #args = parse_args()
-    #config_path = args.config
-    #print(f"running with configuration file: {config_path}")
-    #config = get_config_file(config_path)
-    config = get_config_file('src/configurations/config_season2_MSE_W_newfieldsV3.yaml')
+    args = parse_args()
+    config_path = args.config
+    print(f"running with configuration file: {config_path}")
+    config = get_config_file(config_path)
+    config = get_config_file('src/configurations/config_season2_MSE_W_allFIleds0.yaml')
     print(config)
 
     
-    dataloader_train, dataloader_test, scaler, output_scale_index, x_scale_index, x_f_scale_index = data_preparation(
+    scaler, output_scale_index, x_scale_index, x_f_scale_index, selected_columns = data_preparation(
         config
     )
-    model, loss_mse, mse_overEpoches = train(
-        config, dataloader_train, dataloader_test, output_scale_index, scaler
+    model, loss_mse, mse_overEpoches, test_y, test_output = train(
+        config, output_scale_index, scaler, selected_columns
     )
-    save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches)
+    save(config, model, scaler, output_scale_index, x_scale_index, x_f_scale_index, loss_mse, mse_overEpoches, test_y, test_output)
 

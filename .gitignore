@@ -7,3 +7,4 @@ out.json
 .vscode/**
 .env
 .DS_Store
+.cache.sqlite
