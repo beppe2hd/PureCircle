@@ -269,7 +269,7 @@ def train(config,output_scale_index, scaler, selected_columns):
         for plot_file_path in config["files"]["training"]:
 
             used_plots+=1
-            print(f"Currently working on plot {plot_file_path.split('/')[-1]} - plot {used_plots} of {len(config["files"]["training"])}")
+            print(f'Currently working on plot {plot_file_path.split("/")[-1]} - plot {used_plots} of {len(config["files"]["training"])}')
 
             df_train = pd.read_csv(plot_file_path)
             df_train = create_sub_df(df_train, selected_columns)
