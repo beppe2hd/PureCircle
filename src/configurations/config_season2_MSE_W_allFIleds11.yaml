@@ -1,0 +1,65 @@
+name: LSTM_Season2_MSE_W_allfields_RNN_2_all_03_20e
+version: 0.0.1
+
+delta_mode: 0
+
+architecture: 
+  type: "RNN"
+  hidden: 2
+
+hyperparameters:
+  batch_size: 32
+  learning_rate: 0.001
+  momentum: 0.9
+  weight_decay: 0.0001
+  optimizer: "Adam"
+  loss: "MSE_W"
+  loss_MSE_W_decay: 0.3
+  epoches: 20
+
+window:
+  past: int
+  forecast: int
+
+files:
+  training: [ "./data/csv_files/field_f1",
+              "./data/csv_files/field_f2",
+              "./data/csv_files/field_f3",
+              "./data/csv_files/field_f4",
+              "./data/csv_files/field_f5",
+              "./data/csv_files/field_f6",
+              "./data/csv_files/field_f7",
+              "./data/csv_files/field_f8",
+              "./data/csv_files/field_f9",
+              "./data/csv_files/field_f10",
+              "./data/csv_files/field_f11",
+              "./data/csv_files/field_f12",
+              "./data/csv_files/field_f13",
+              "./data/csv_files/field_f14",
+              "./data/csv_files/field_f15",
+              "./data/csv_files/field_f16",
+              "./data/csv_files/field_f18",]
+  test: "./data/csv_files/field_f17"
+
+features:
+  input:
+    fiedls: ['s_b','s_w','LAI','irr']
+    meteo_historical: ['temperature_2m','relative_humidity_2m','cloud_cover','wind_speed_10m','soil_temperature_0_to_7cm','rain']
+    meteo_forecast: ['temperature_2m_f','relative_humidity_2m_f','cloud_cover_f','wind_speed_10m_f','rain_f']
+  output: ['s_w']
+  input_seq_len: 72
+  output_seq_len: 48
+  shift: 0
+  geo_coordinate:
+    lat: 52.52
+    lon: 13.41
+
+irr_param:
+  durartio: 
+    a: -4.99
+    b: 137.97
+  volume:
+    a: -3.16
+    b: 87.22
+  threshold: 22.0
+

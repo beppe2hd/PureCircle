@@ -10,10 +10,10 @@ tests = ['config_season2_MSE_W_allFIleds0',
          'config_season2_MSE_W_allFIleds1',
          'config_season2_MSE_W_allFIleds2',
          'config_season2_MSE_W_allFIleds3',
-         'config_season2_MSE_W_allFIleds4',
-         'config_season2_MSE_W_allFIleds5',
-         'config_season2_MSE_W_allFIleds6',
-         'config_season2_MSE_W_allFIleds7']
+         'config_season2_MSE_W_allFIleds8',
+         'config_season2_MSE_W_allFIleds9',
+         'config_season2_MSE_W_allFIleds10',
+         'config_season2_MSE_W_allFIleds11']
 
 iter = 0
 for test in tests:
