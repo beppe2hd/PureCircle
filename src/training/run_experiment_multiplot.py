@@ -241,10 +241,20 @@ def data_preparation(config):
 
 def train(config,output_scale_index, scaler, selected_columns):
 
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+
+    print(f"Device: {device}")
+
     model = create_model(config)
+    model.to(device)
 
     optimizer = load_Optimizer(model, config)
-    criterion = load_Loss(config)
+    criterion = load_Loss(config, device)
     epochs = config["hyperparameters"]["epoches"]
 
     sectors = [0,6,12,24,48]
@@ -278,9 +288,9 @@ def train(config,output_scale_index, scaler, selected_columns):
 
             for x_batch, x_f_batch, y_batch in dataloader_train:
                 count += 1
-                x_batch = x_batch.type(torch.float32)
-                x_f_batch = x_f_batch.type(torch.float32)
-                y_batch = y_batch.type(torch.float32)
+                x_batch = x_batch.type(torch.float32).to(device)
+                x_f_batch = x_f_batch.type(torch.float32).to(device)
+                y_batch = y_batch.type(torch.float32).to(device)
                 # Forward pass
                 outputs = model(x_batch, x_f_batch)
 
@@ -302,15 +312,15 @@ def train(config,output_scale_index, scaler, selected_columns):
             count = 0
             for x_batch, x_f_batch, y_batch in dataloader_test:
                 count += 1
-                x_batch = x_batch.type(torch.float32)
-                x_f_batch = x_f_batch.type(torch.float32)
-                y_batch = y_batch.type(torch.float32)
+                x_batch = x_batch.type(torch.float32).to(device)
+                x_f_batch = x_f_batch.type(torch.float32).to(device)
+                y_batch = y_batch.type(torch.float32).to(device)
                 # Forward pass
                 outputs = model(x_batch, x_f_batch)
 
                 ## apply inverse_scale_data(output, col)
-                outputs = inverse_scale_data(outputs, output_scale_index, scaler)
-                y_batch = inverse_scale_data(y_batch, output_scale_index, scaler)
+                outputs = inverse_scale_data(outputs, output_scale_index, scaler, device)
+                y_batch = inverse_scale_data(y_batch, output_scale_index, scaler, device)
                 if epoch == epochs-1:
                     tensor_list_y.append(y_batch)
                     tensor_list_output.append(outputs)

@@ -15,7 +15,7 @@ hyperparameters:
   optimizer: "Adam"
   loss: "MSE_W"
   loss_MSE_W_decay: 0.3
-  epoches: 20
+  epoches: 2
 
 window:
   past: int
@@ -23,22 +23,7 @@ window:
 
 files:
   training: [ "./data/csv_files/field_f1",
-              "./data/csv_files/field_f2",
-              "./data/csv_files/field_f3",
-              "./data/csv_files/field_f4",
-              "./data/csv_files/field_f5",
-              "./data/csv_files/field_f6",
-              "./data/csv_files/field_f7",
-              "./data/csv_files/field_f8",
-              "./data/csv_files/field_f9",
-              "./data/csv_files/field_f10",
-              "./data/csv_files/field_f11",
-              "./data/csv_files/field_f12",
-              "./data/csv_files/field_f13",
-              "./data/csv_files/field_f14",
-              "./data/csv_files/field_f15",
-              "./data/csv_files/field_f16",
-              "./data/csv_files/field_f18",]
+              "./data/csv_files/field_f2"]
   test: "./data/csv_files/field_f17"
 
 features:

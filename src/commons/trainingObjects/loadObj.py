@@ -8,15 +8,17 @@ import torch
 import torch.nn as nn
 
 class ExpWeightedMSELoss(nn.Module):
-    def __init__(self, horizon=48, decay=0.1):
+    def __init__(self, device = torch.device("cpu"), horizon=48, decay=0.1):
         super().__init__()
         t = torch.arange(horizon).float()
         weights = torch.exp(-decay * t)
 
+
         # Normalizzazione opzionale (mantiene scala simile alla MSE)
         weights = weights / weights.sum() * horizon
+        self.device = device
 
-        self.register_buffer("weights", weights)  # non è un parametro allenabile
+        self.register_buffer("weights", weights)  # non è un parametro
 
     def forward(self, pred, target):
         # pred, target: (B, 48, 2)
@@ -24,7 +26,7 @@ class ExpWeightedMSELoss(nn.Module):
         loss = (pred - target) ** 2   # (B, 48, 2)
 
         # reshape pesi per broadcast su feature
-        w = self.weights.view(1, -1, 1)  # (1, 48, 1)
+        w = self.weights.view(1, -1, 1).to(self.device)  # (1, 48, 1)
 
         weighted_loss = loss * w
 
@@ -60,7 +62,7 @@ def load_Optimizer(model, config):
         )
 
 
-def load_Loss(config):
+def load_Loss(config, device):
 
     loss_type = config["hyperparameters"]["loss"]
 
@@ -75,7 +77,8 @@ def load_Loss(config):
             criterion = mape
 
         if loss_type == "MSE_W":
-            criterion = ExpWeightedMSELoss(decay=config["hyperparameters"]["loss_MSE_W_decay"])
+            criterion = ExpWeightedMSELoss(decay=config["hyperparameters"]["loss_MSE_W_decay"], device = device)
+            print(device)
 
         if loss_type == "Huber":
             criterion = nn.HuberLoss(delta=1.0)
