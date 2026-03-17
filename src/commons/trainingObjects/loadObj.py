@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 class ExpWeightedMSELoss(nn.Module):
+    #def __init__(self, horizon=48, decay=0.1):
     def __init__(self, device = torch.device("cpu"), horizon=48, decay=0.1):
         super().__init__()
         t = torch.arange(horizon).float()
@@ -78,7 +79,8 @@ def load_Loss(config, device):
 
         if loss_type == "MSE_W":
             criterion = ExpWeightedMSELoss(decay=config["hyperparameters"]["loss_MSE_W_decay"], device = device)
-            print(device)
+            #criterion = ExpWeightedMSELoss(decay=config["hyperparameters"]["loss_MSE_W_decay"])
+            #print(device)
 
         if loss_type == "Huber":
             criterion = nn.HuberLoss(delta=1.0)

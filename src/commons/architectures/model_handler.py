@@ -79,7 +79,7 @@ def create_model(config):
             
 
 
-def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, delta_mode):
+def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, delta_mode, device):
     with torch.inference_mode():
 
         print("------")
@@ -87,8 +87,8 @@ def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index,
         print(f"x [-1,0:2]: {x[-1,0:2]}")
         x_delta = x[-1,0:2]
 
-        x = specific_scale_data(x, x_scale_index, scaler)
-        x_f = specific_scale_data(x_f, x_f_scale_index, scaler)
+        x = specific_scale_data(x, x_scale_index, scaler, device)
+        x_f = specific_scale_data(x_f, x_f_scale_index, scaler, device)
         print("------")
         print(f"x shape: {x.shape}")
         print(f"x [0,-1,0:2]: {x[0,-1,0:2]}")
@@ -106,11 +106,11 @@ def inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index,
         print(f'y shape out {y.shape}')
         #if delta_mode ==1:
         #            y=y+x[-1,0:2]
-        y = inverse_scale_data(y, output_scale_index, scaler)
+        y = inverse_scale_data(y, output_scale_index, scaler, device)
         #if delta_mode ==1:
         #    y=y+x_delta.unsqueeze(0)
         print("*-------*")
-        return y.squeeze().detach().numpy()
+        return y.cpu().squeeze().detach().numpy()
     
 def load_weights_and_scale(model, config):
 

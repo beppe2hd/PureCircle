@@ -150,8 +150,21 @@ def forecast(field_id: int):
     print(x_f)
     print("-"*50)
     print("-"*50)
+
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+
+    print(f"Device: {device}")
+    x = x.to(device)
+    x_f = x_f.to(device)
     
-    y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
+    #y = inference(model, x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"])
+    y = inference(model.to(device), x, x_f, output_scale_index, x_scale_index, x_f_scale_index, scaler, config["delta_mode"], device)
+
 
     date_index = pd.date_range(start=start_dt_forecast, end=end_dt_forecast, freq="h")
     date_index = [d.strftime('%m-%d %H:00') for d in date_index.to_list()]
