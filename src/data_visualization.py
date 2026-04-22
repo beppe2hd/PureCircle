@@ -7,7 +7,7 @@ sys.path.append(os.getenv("PYTHONPATH"))
 print(os.getenv("PYTHONPATH"))
 from src.commons.utils import get_config_file
 
-config = get_config_file("../src/configurations/config_season2_MSE_W_allFIleds1.yaml")
+config = get_config_file("../src/configurations/config_season2_MSE_W_allFIleds16.yaml")
 
 folder_path = "../src/weights/" + config["name"] + config["version"].replace(".", "_")
 path_test_output = folder_path + "/test_output.pkl"
@@ -30,6 +30,25 @@ plt.plot(meanError)
 plt.title("SM abs Error (mean)"); plt.xlabel("time forecast Horizon"); plt.ylabel("variance")
 plt.grid(True, alpha=0.3)
 plt.show()
+
+#%%
+import numpy as np
+qs = [0, 10, 25, 50, 75, 90, 100]
+err_q = np.percentile(abs_error.detach().cpu().numpy(), qs, axis=0)
+err_q = err_q.squeeze()
+t = np.arange(err_q.shape[1])
+
+plt.plot(t, err_q[3], label='p50')
+plt.fill_between(t, err_q[2], err_q[4], alpha=0.3, label='p25-p75')
+plt.fill_between(t, err_q[1], err_q[5], alpha=0.2, label='p10-p90')
+#plt.plot(t, err_q[0], '--', alpha=0.5, label='min')
+#plt.plot(t, err_q[6], '--', alpha=0.5, label='max')
+plt.legend()
+plt.xlabel("Timestep")
+plt.ylabel("Absolute error")
+plt.show()
+
+
 
 # %%
 # Plot absolute differenze betweehn each time stamp and the first one in the gt sequences

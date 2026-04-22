@@ -291,10 +291,15 @@ def train(config,output_scale_index, scaler, selected_columns):
                 x_batch = x_batch.type(torch.float32).to(device)
                 x_f_batch = x_f_batch.type(torch.float32).to(device)
                 y_batch = y_batch.type(torch.float32).to(device)
+                #print(x_batch)
+                #print(x_f_batch)
+                #print(y_batch)
                 # Forward pass
                 outputs = model(x_batch, x_f_batch)
+                #print(outputs)
 
                 loss = criterion(outputs, y_batch)
+                
                 train_loss += loss.item()
 
                 # Backpropagation
