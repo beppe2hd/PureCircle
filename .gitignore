@@ -1,10 +1,6 @@
-weights/
-out.json
-.idea/
-.vscode/
-**/__pycache__
-**/data
-.vscode/**
-.env
-.DS_Store
+scr/weights/*
+src/configurations
+**/__pycache__/
+.vscode/*
 .cache.sqlite
+*.png
