@@ -1,4 +1,4 @@
-scr/weights/*
+scr/weights
 src/configurations
 **/__pycache__/
 .vscode/*
